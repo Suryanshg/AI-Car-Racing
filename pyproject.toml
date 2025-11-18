@@ -1,0 +1,10 @@
+[project]
+name = "rl-final-group-4"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "gymnasium[box2d]>=1.2.2",
+    "swig>=4.4.0",
+]
