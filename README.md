@@ -3,7 +3,7 @@
 ## Initial Setup
 
 ### Prerequisites (Linux / Ubuntu)
-Install system build tools and the Python headers before creating the venv. Adjust the python3.x-dev package to match the Python minor version required by this project (see pyproject.toml -> requires-python).
+Install system build tools and the Python headers before creating the venv:
 ```bash
 sudo apt update
 sudo apt install -y build-essential swig python3.11-dev python3.11-venv
