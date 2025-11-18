@@ -1,0 +1,12 @@
+# Ignore .venv
+.venv
+
+# Ignore all zio files
+*.zip
+
+# Ignore all stuff in "data" folder except for the .gitkeep
+data/*
+!data/.gitkeep
+
+# Ignore pycache
+__pycache__/
