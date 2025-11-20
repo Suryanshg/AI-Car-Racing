@@ -8,6 +8,13 @@ Install system build tools and the Python headers before creating the venv:
 sudo apt update
 sudo apt install -y build-essential swig python3.11-dev python3.11-venv
 ```
+### Prerequisites (Windows)
+Download swig and set up system path:
+https://swig.org/Doc1.3/Windows.html#Windows_examples
+
+Visual Studios Build Tools 2026:
+https://visualstudio.microsoft.com/visual-cpp-build-tools/
+(make sure to check the "MSVC v143 - VS 2022 C++ build tools" package)
 
 ### Download uv
 Please download `uv` (Ultra-Violet) for Python Project Dependency Management: https://docs.astral.sh/uv/getting-started/installation/#installation-methods
@@ -24,6 +31,8 @@ In the same project directory, execute the following (if virtual env is not alre
 ```bash
 source .venv/bin/activate
 ```
+### Windows
+.\.venv\Scripts\Activate.ps1    
 
 ### Adding any Libraries / Dependencies
 To add any new dependencies (libraries):
@@ -36,7 +45,8 @@ Please run the following command from the project directory:
 ```bash
 uv run .venv/lib/python3.11/site-packages/gymnasium/envs/box2d/car_racing.py
 ```
-
+### Windows Path
+uv run .venv/lib/site-packages/gymnasium/envs/box2d/car_racing.py
 
 ---
 
