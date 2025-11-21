@@ -28,4 +28,10 @@ class Agent_PPO():
         # Reset the env and get the first state
         state = self.env.reset()
 
-        self.env.step(np.array([0.0, 2.0, 0.0]))
+        total_reward = 0.0
+
+        # Do Full Gas Action for 10 times
+        for i in range(10):
+            next_state, reward, done, truncated = self.env.step(np.array([0.0, 2.0, 0.0]))
+            total_reward += reward
+            print(f"Step {i+1} - Reward: {reward}, Total Reward: {total_reward}")

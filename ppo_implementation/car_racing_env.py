@@ -30,7 +30,7 @@ class CarRacingV3Wrapper(gym.Wrapper):
 
             continuous (bool, optional): Represents the condition to decide whether the agent
             uses continuous or discrete actions. Defaults to True.
-            
+
             args (_type_, optional): Special Arguments. Defaults to None.
         """
         # Init vanilla CarRacing-v3 env
@@ -112,9 +112,6 @@ class CarRacingV3Wrapper(gym.Wrapper):
 
         # Convert the next state to grayscale            
         next_state_grayscale = self._rgb_to_grayscale(next_state_rgb) # shape: (96, 96)
-
-        # Remove the first frame from the frame stack
-        self.frame_stack.pop(0)
 
         # Append the next state in to the frame stack
         self.frame_stack.append(next_state_grayscale)
