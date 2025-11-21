@@ -18,7 +18,20 @@ class CarRacingV3Wrapper(gym.Wrapper):
                  continuous = True,
                  args = None):
         """
-        TODO:
+        Constructor for initializing the CarRacingV3Wrapper.
+
+        Args:
+            env_name (str, optional): Represents the name of the env. Defaults to "CarRacing-v3".
+
+            render_mode (_type_, optional): Represents the render mode. Defaults to None.
+
+            lap_complete_percent (float, optional): Represents the percentage of tiles
+            that must be visited by the agent before a lap is considered complete. Defaults to 0.95.
+
+            continuous (bool, optional): Represents the condition to decide whether the agent
+            uses continuous or discrete actions. Defaults to True.
+            
+            args (_type_, optional): Special Arguments. Defaults to None.
         """
         # Init vanilla CarRacing-v3 env
         self.env = gym.make(env_name, 
@@ -35,15 +48,21 @@ class CarRacingV3Wrapper(gym.Wrapper):
         self.frame_stack_size = args.frame_stack_size
 
         # Init frames for stacking states
-        self.frames = deque(maxlen = self.frame_stack_size)
+        self.frame_stack = deque(maxlen = self.frame_stack_size)
 
 
 
-    def reset(self):
+    def reset(self) -> np.ndarray:
         """
-        TODO:
+        Wrapper method on top of the original reset method. Performs following operations:
+        - Skips first 50 zoom-in frames of the CarRacing-v3 Environment
+        - Converts the initial state (after zoom-in) into grayscale
+        - Stacks the grayscale initial state as a numpy array
+
+        Returns:
+            np.ndarray: The initial state, stacked into frames.
         """
-        # TODO: Implement a way to capture reward memory and initialize it here
+        # TODO: [If Needed] Implement a way to capture reward memory and initialize it here 
 
         # Reset the env to get the starting state
         state, info = self.env.reset() # state shape: (96, 96, 3)
@@ -54,42 +73,55 @@ class CarRacingV3Wrapper(gym.Wrapper):
         for _ in range(50):
             state, _, _, _, _ = self.env.step(NO_OP_ACTION)
             
-
         # Convert RGB Image to Grayscale
-        state_grayscale = self._rgb_to_grayscale(state) # state shape: (96, 96)
+        state_grayscale = self._rgb_to_grayscale(state) # state shape: (96, 96) 
 
-        # plt.imshow(state)
-        # plt.title('RGB Image')
-        # plt.savefig("rgb_img.png")
-        # plt.close()  
-
-
-        # plt.imshow(state_grayscale, cmap='gray')
-        # plt.title('Grayscale Image')
-        # plt.savefig("grayscale_img.png")
-        # plt.close()    
-
-        # TODO: Implement stacking states together
         # Clear all stacked frames
-        self.frames.clear()
+        self.frame_stack.clear()
 
         # Stack initial state in the frames queue, "self.frame_stack_size" times
         for _ in range(self.frame_stack_size):
-            self.frames.append(state_grayscale)
-        stacked_frames = np.stack(self.frames, axis = 0) # (frame_stack_size, 96, 96)
+            self.frame_stack.append(state_grayscale)
+        stacked_states = np.stack(self.frame_stack, axis = 0) # (frame_stack_size, 96, 96)
 
-        return stacked_frames
+        return stacked_states
     
 
-    def step(self, action):
+    def step(self, action: np.ndarray):
         """
         TODO:
         """
-        # TODO: Improve this method
-        if not self.env.action_space.contains(action):
-            raise ValueError('Invalid action!!')
-        observation, reward, done, truncated, info = self.env.step(action)
-        return observation, reward, done, truncated, info
+        # TODO: Throw an error, if the action does not belong to the action space
+        
+        # Init variable to keep track of total_reward from this action
+        total_reward = 0.0
+
+        # Repeat action for the self.action_repetition times
+        for _ in range(self.action_repetition):
+            next_state_rgb, reward, done, truncated, _ = self.env.step(action)
+
+            # TODO: Implement Reward Augmentations here
+            # Examples: Green Penalty, Die Penalty Removal etc.
+
+            # Accumulate total reward for this action
+            total_reward += reward
+
+            # If episode has ended, stop action repetition
+            if done:
+                break
+
+        # Convert the next state to grayscale            
+        next_state_grayscale = self._rgb_to_grayscale(next_state_rgb) # shape: (96, 96)
+
+        # Remove the first frame from the frame stack
+        self.frame_stack.pop(0)
+
+        # Append the next state in to the frame stack
+        self.frame_stack.append(next_state_grayscale)
+
+        stacked_next_state = np.stack(self.frame_stack, axis = 0) # shape: (frame_stack_size, 96, 96)
+
+        return stacked_next_state, total_reward, done, truncated
 
 
     def render(self):
@@ -101,10 +133,20 @@ class CarRacingV3Wrapper(gym.Wrapper):
 
 
 
-    def _rgb_to_grayscale(self, rgb_img):
+    def _rgb_to_grayscale(self, rgb_img: np.ndarray) -> np.ndarray:
+        """
+        Converts an RGB Image (represented as np array) into its equivalent Grayscale representation.
+        Uses the Standard Luminosity Formula to compute the Grayscale representation.
+        """
+        grayscale_img = np.dot(rgb_img[..., :3], STD_LUMINOSITY_FORMULA_ARR)
+        return grayscale_img
+    
+
+    def _save_state_img(self, state: np.ndarray, img_title: str, img_file_name: str):
         """
         TODO:
         """
-        grayscale_img = np.dot(rgb_img[..., :3], STD_LUMINOSITY_FORMULA_ARR)
-
-        return grayscale_img
+        plt.imshow(state)
+        plt.title(img_title)
+        plt.savefig(img_file_name)
+        plt.close()  
