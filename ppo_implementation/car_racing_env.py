@@ -118,6 +118,7 @@ class CarRacingV3Wrapper(gym.Wrapper):
 
             # TODO: Implement Reward Augmentations here
             # Examples: Green Penalty, Die Penalty Removal etc.
+            # self._compute_green_penalty(next_state_rgb)
 
             # Accumulate total reward for this action
             total_reward += reward
@@ -145,6 +146,21 @@ class CarRacingV3Wrapper(gym.Wrapper):
         pass
 
 
+    def _compute_green_penalty(self, rgb_img: np.ndarray) -> float:
+        """_summary_
+
+        Args:
+            rgb_img (np.ndarray): _description_
+
+        Returns:
+            float: _description_
+        """
+
+        #TODO: Compute penalty using wheel coordinates
+        
+        return 0.0
+
+
 
     def _rgb_to_grayscale(self, rgb_img: np.ndarray) -> np.ndarray:
         """
@@ -155,11 +171,11 @@ class CarRacingV3Wrapper(gym.Wrapper):
         return grayscale_img
     
 
-    def _save_state_img(self, state: np.ndarray, img_title: str, img_file_name: str):
+    def save_state_img(self, state: np.ndarray, img_title: str, img_file_name: str, cmap = None):
         """
         TODO:
         """
-        plt.imshow(state)
+        plt.imshow(state, cmap = cmap)
         plt.title(img_title)
         plt.savefig(img_file_name)
         plt.close()  
