@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from collections import deque
 from argparse import Namespace
+from typing import Tuple
 
 # Array to compute grayscale images from rgb images
 STD_LUMINOSITY_FORMULA_ARR = np.array([0.299, 0.587, 0.114])
@@ -27,12 +28,12 @@ class CarRacingV3Wrapper(gym.Wrapper):
             render_mode (str, optional): Represents the render mode. Defaults to None.
 
             lap_complete_percent (float, optional): Represents the percentage of tiles
-            that must be visited by the agent before a lap is considered complete. Defaults to 0.95.
+                that must be visited by the agent before a lap is considered complete. Defaults to 0.95.
 
             continuous (bool, optional): Represents the condition to decide whether the agent
-            uses continuous or discrete actions. Defaults to True.
+                uses continuous or discrete actions. Defaults to True.
 
-            args (argparse.Namespace): Captures Special Arguments which must be provided
+            args (argparse.Namespace): Captures Special Arguments which must be provided.
         """
         # Init vanilla CarRacing-v3 env
         self.env = gym.make(env_name, 
@@ -56,9 +57,9 @@ class CarRacingV3Wrapper(gym.Wrapper):
     def reset(self) -> np.ndarray:
         """
         Wrapper method on top of the original reset method. Performs following operations:
-        - Skips first 50 zoom-in frames of the CarRacing-v3 Environment
-        - Converts the initial state (after zoom-in) into grayscale
-        - Stacks the grayscale initial state as a numpy array
+        - Skips first 50 zoom-in frames of the CarRacing-v3 Environment.
+        - Converts the initial state (after zoom-in) into grayscale.
+        - Stacks the grayscale initial state as a numpy array.
 
         Returns:
             np.ndarray: The initial state, stacked into frames.
@@ -88,9 +89,23 @@ class CarRacingV3Wrapper(gym.Wrapper):
         return stacked_states
     
 
-    def step(self, action: np.ndarray):
+    def step(self, action: np.ndarray) -> Tuple[np.ndarray, float, bool, bool]:
         """
-        TODO:
+        Wrapper method on top of original step method, which allows the agent to take an
+        action in the current state and move to the next state. At a high level, it does
+        the following:
+        - Repeats the input action multiple times (according to action_repetion supplied for args in the constructor)
+        - Accumulates the Total Reward after executing each action
+        - Converts the final state after action repetition into grayscale
+        - Pushes the final state into the stack frame
+
+        Args:
+            action (np.ndarray): The action represented by a numpy array of shape (3,), 
+                which comes from the continuous action space.
+
+        Returns:
+            Tuple[np.ndarray, float, bool, bool]: Returns the stacked next state, total reward,
+            done, and truncated after performing action repetition.
         """
         # TODO: Throw an error, if the action does not belong to the action space
         
