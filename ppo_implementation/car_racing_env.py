@@ -2,6 +2,7 @@ import gymnasium as gym
 import numpy as np
 import matplotlib.pyplot as plt
 from collections import deque
+from argparse import Namespace
 
 # Array to compute grayscale images from rgb images
 STD_LUMINOSITY_FORMULA_ARR = [0.299, 0.587, 0.114]
@@ -12,18 +13,18 @@ NO_OP_ACTION = np.array([0.0, 0.0, 0.0])
 
 class CarRacingV3Wrapper(gym.Wrapper):
     def __init__(self,
+                 args: Namespace,
                  env_name = "CarRacing-v3",
                  render_mode = None,
                  lap_complete_percent = 0.95,
-                 continuous = True,
-                 args = None):
+                 continuous = True):
         """
         Constructor for initializing the CarRacingV3Wrapper.
 
         Args:
             env_name (str, optional): Represents the name of the env. Defaults to "CarRacing-v3".
 
-            render_mode (_type_, optional): Represents the render mode. Defaults to None.
+            render_mode (str, optional): Represents the render mode. Defaults to None.
 
             lap_complete_percent (float, optional): Represents the percentage of tiles
             that must be visited by the agent before a lap is considered complete. Defaults to 0.95.
@@ -31,7 +32,7 @@ class CarRacingV3Wrapper(gym.Wrapper):
             continuous (bool, optional): Represents the condition to decide whether the agent
             uses continuous or discrete actions. Defaults to True.
 
-            args (_type_, optional): Special Arguments. Defaults to None.
+            args (argparse.Namespace): Captures Special Arguments which must be provided
         """
         # Init vanilla CarRacing-v3 env
         self.env = gym.make(env_name, 
