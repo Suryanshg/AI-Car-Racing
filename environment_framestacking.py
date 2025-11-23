@@ -23,7 +23,12 @@ class CarRacingV3Wrapper(gym.Env):
                             lap_complete_percent = lap_complete_percent, 
                             domain_randomize = False, # HARDCODING as False for our purposes
                             continuous = continuous)
-        
+        #implemented grayscaling
+        self.env = GrayscaleObservation(self.env, keep_dim=False)
+
+        # 3. Resize: (96, 96) -> (84, 84) as described in the proposal. can be tweaked later if needed
+        self.env = ResizeObservation(self.env, (84, 84))
+
         self.env = FrameStackObservation(self.env, stack_size=framestack)
         # Extract the Action and Observation Space from the created environment
         self.action_space = self.env.action_space
