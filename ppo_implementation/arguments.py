@@ -30,7 +30,7 @@ def get_args(parser):
     # Misc Args
     parser.add_argument('--seed', type=int, default=0, help='seed value for randomizing')
     parser.add_argument('--save_freq', type=int, default=50, help='save model every N iterations')
-    parser.add_argument('--log_freq', type=int, default=10, help='log progress every N iterations')
+    parser.add_argument('--log_freq', type=int, default=1, help='log progress every N iterations')
 
     # Return the parser with added arguments
     return parser
