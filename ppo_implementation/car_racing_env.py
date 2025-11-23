@@ -104,7 +104,7 @@ class CarRacingV3Wrapper(gym.Wrapper):
                 which comes from the continuous action space.
 
         Returns:
-            Tuple[np.ndarray, float, bool, bool]: Returns the stacked next state, total reward,
+            tuple (Tuple[np.ndarray, float, bool, bool]): Returns the stacked next state, total reward,
             done, and truncated after performing action repetition.
         """
         # TODO: Throw an error, if the action does not belong to the action space

@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from typing import Tuple
 
 class PPO_Network(nn.Module):
 
@@ -55,7 +56,7 @@ class PPO_Network(nn.Module):
         )
 
 
-    def forward(self, state):
+    def forward(self, state) -> Tuple[Tuple[torch.Tensor, torch.Tensor], torch.Tensor]:
         """
         TODO:
 
