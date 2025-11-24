@@ -18,7 +18,7 @@ def get_args(parser):
     parser.add_argument('--value_loss_coef', type=float, default=0.5, help='value loss coefficient')
     parser.add_argument('--entropy_coef', type=float, default=0.01, help='entropy coefficient')
     parser.add_argument('--max_grad_norm', type=float, default=0.5, help='max gradient norm')
-    parser.add_argument('--training_iterations', type=int, default=1000, help='number of training iterations')
+    parser.add_argument('--training_iterations', type=int, default=5, help='number of training iterations')
     parser.add_argument('--buffer_capacity', type=int, default=2048, help='replay buffer capacity')
     parser.add_argument('--num_episodes', type=int, default=5, help='number of episodes per iteration')
     parser.add_argument('--max_episode_steps', type=int, default=1000, help='max steps per episode')

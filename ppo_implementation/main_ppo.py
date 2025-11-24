@@ -1,7 +1,8 @@
 import argparse
 import time
 from arguments import get_args
-from car_racing_env import CarRacingV3Wrapper
+# from car_racing_env import CarRacingV3Wrapper
+from car_racing_env_v2 import CarRacingV3Wrapper
 from agent_ppo import Agent_PPO
 
 def parse():
@@ -43,7 +44,10 @@ def run(args):
         agent = Agent_PPO(env, args)
 
         # Train the PPO Agent
-        agent.train()
+        # agent.train()
+
+        # Perform Test Drive
+        agent.test_drive()
 
     # If user requested testing mode
     if args.test_ppo:

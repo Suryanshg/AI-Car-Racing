@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from collections import deque
 from argparse import Namespace
 from typing import Tuple
+from gymnasium.wrappers import FrameStackObservation, GrayscaleObservation
 
 # Array to compute grayscale images from rgb images
 STD_LUMINOSITY_FORMULA_ARR = np.array([0.299, 0.587, 0.114])
@@ -45,15 +46,17 @@ class CarRacingV3Wrapper(gym.Wrapper):
                             max_episode_steps = args.max_episode_steps * args.action_repetition + 100
                             )
 
+        # Convert to Grayscale (96, 96, 3) -> (96, 96)
+        self.env = GrayscaleObservation(self.env, keep_dim=False)
+
+        # Stack Frames (96, 96) -> (k, 96, 96)
+        self.env = FrameStackObservation(self.env, stack_size=args.frame_stack_size)
+
         # Call the Parent Class Constructor
         super().__init__(self.env)
 
         # Store the arguments from command line
         self.action_repetition = args.action_repetition
-        self.frame_stack_size = args.frame_stack_size
-
-        # Init frames for stacking states
-        self.frame_stack = deque(maxlen = self.frame_stack_size)
 
 
 
@@ -77,19 +80,8 @@ class CarRacingV3Wrapper(gym.Wrapper):
         # the right action for a given state
         for _ in range(50):
             state, _, _, _, _ = self.env.step(NO_OP_ACTION)
-            
-        # Convert RGB Image to Grayscale
-        state_grayscale = self._rgb_to_grayscale(state) # state shape: (96, 96) 
 
-        # Clear all stacked frames
-        self.frame_stack.clear()
-
-        # Stack initial state in the frames queue, "self.frame_stack_size" times
-        for _ in range(self.frame_stack_size):
-            self.frame_stack.append(state_grayscale)
-        stacked_states = np.stack(self.frame_stack, axis = 0) # (frame_stack_size, 96, 96)
-
-        return stacked_states
+        return state
     
 
     def step(self, action: np.ndarray) -> Tuple[np.ndarray, float, bool, bool]:
@@ -117,7 +109,7 @@ class CarRacingV3Wrapper(gym.Wrapper):
 
         # Repeat action for the self.action_repetition times
         for _ in range(self.action_repetition):
-            next_state_rgb, reward, done, truncated, _ = self.env.step(action)
+            next_state, reward, done, truncated, _ = self.env.step(action)
 
             # TODO: Implement Reward Augmentations here
             # Examples: Green Penalty, Die Penalty Removal etc.
@@ -130,15 +122,7 @@ class CarRacingV3Wrapper(gym.Wrapper):
             if done or truncated:
                 break
 
-        # Convert the next state to grayscale            
-        next_state_grayscale = self._rgb_to_grayscale(next_state_rgb) # shape: (96, 96)
-
-        # Append the next state in to the frame stack
-        self.frame_stack.append(next_state_grayscale)
-
-        stacked_next_state = np.stack(self.frame_stack, axis = 0) # shape: (frame_stack_size, 96, 96)
-
-        return stacked_next_state, total_reward, done, truncated
+        return next_state, total_reward, done, truncated
 
 
     def render(self):
@@ -146,7 +130,7 @@ class CarRacingV3Wrapper(gym.Wrapper):
         TODO:
         """
         # TODO: Implement this
-        pass
+        return self.env.render()
 
 
     def _compute_green_penalty(self, rgb_img: np.ndarray) -> float:
@@ -160,25 +144,19 @@ class CarRacingV3Wrapper(gym.Wrapper):
         """
 
         #TODO: Compute penalty using wheel coordinates
-        
         return 0.0
-
-
-
-    def _rgb_to_grayscale(self, rgb_img: np.ndarray) -> np.ndarray:
-        """
-        Converts an RGB Image (represented as np array) into its equivalent Grayscale representation.
-        Uses the Standard Luminosity Formula to compute the Grayscale representation.
-        """
-        grayscale_img = np.dot(rgb_img[..., :3], STD_LUMINOSITY_FORMULA_ARR)
-        return grayscale_img
     
 
     def save_state_img(self, state: np.ndarray, img_title: str, img_file_name: str, cmap = None):
         """
         TODO:
         """
-        plt.imshow(state, cmap = cmap)
+        if len(state.shape) == 3:
+            img_to_show = state[-1]
+        else:
+            img_to_show = state
+
+        plt.imshow(img_to_show, cmap = cmap)
         plt.title(img_title)
         plt.savefig(img_file_name)
         plt.close()  

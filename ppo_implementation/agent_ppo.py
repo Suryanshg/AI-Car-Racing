@@ -1,4 +1,5 @@
-from car_racing_env import CarRacingV3Wrapper
+# from car_racing_env import CarRacingV3Wrapper
+from car_racing_env_v2 import CarRacingV3Wrapper
 import torch
 import numpy as np
 from ppo_network import PPO_Network
@@ -22,7 +23,6 @@ class Agent_PPO():
 
         # Determine device
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        print(f"Using device: {self.device}")
 
         # Init Deep Learning Hyperparams
         self.lr = args.lr
@@ -38,7 +38,7 @@ class Agent_PPO():
         self.entropy_coef = args.entropy_coef
         self.training_iterations = args.training_iterations
         self.buffer_capacity = args.buffer_capacity
-        self.num_episodes = args.num_episodes
+        # self.num_episodes = args.num_episodes
         self.max_episode_steps = args.max_episode_steps
 
         # Init Env Wrapper Args
@@ -140,7 +140,7 @@ class Agent_PPO():
             value: Value estimate of the state (float)
         """
         # Convert state to float32 tensor
-        state_tensor = torch.FloatTensor(state).unsqueeze(0).to(self.device)    # (1, 4, 96, 96)
+        state_tensor = torch.FloatTensor(state).unsqueeze(0).to(self.device).div_(255.0)    # (1, 4, 96, 96)
         
         # Freeze the model weights
         with torch.no_grad():
@@ -172,6 +172,7 @@ class Agent_PPO():
         return action_np, log_prob.item(), value.item()
     
 
+    # TODO: Check if this implementation for collecting episodes is good or not
     def collect_episodes(self):
         """
         Collect trajectories by running current policy in the environment.
@@ -184,10 +185,9 @@ class Agent_PPO():
         # Reset the buffer
         self.reset_buffer()
         
-        # TODO: Check if buffer capacity variable is used or not
-        # Iterate num_episodes times
-        for episode in range(self.num_episodes):
-
+        # Collect episodes until buffer reaches capacity
+        episode = 0
+        while len(self.buffer) < self.buffer_capacity:
             # Begin an episode and get its first state
             state = self.env.reset()
 
@@ -196,7 +196,6 @@ class Agent_PPO():
             
             # Keep collecting data for this episode for max_episode_steps
             for step in range(self.max_episode_steps):
-
                 # Select an action, its log_prob and the value of the current state
                 action, log_prob, value = self.select_action(state)
 
@@ -222,21 +221,33 @@ class Agent_PPO():
 
                 # Move to the next state
                 state = next_state
+
+                # Stop if buffer is full
+                if len(self.buffer) >= self.buffer_capacity:
+                    break
                 
                 # Stop collecting data if episode is done or truncated
                 if done or truncated:
                     break
 
-
             # Accumulate reward for each episode in the global reward queue (for stats)        
             self.episode_rewards.append(episode_reward)
 
             # Log the episode's reward
-            print(f"Episode {episode + 1}/{self.num_episodes} - Reward: {episode_reward:.2f}")
+            episode += 1
+            
+
+            # TODO: For some reason, the buffer size always grows in multiples of 119 per each iteration (5 iterations)
+            print(f"Episode {episode} - Reward: {episode_reward:.2f}, Buffer Size: {len(self.buffer)}/{self.buffer_capacity}, Done: {done}, Truncated: {truncated}")
+            
+            # Stop if buffer is full
+            if len(self.buffer) >= self.buffer_capacity:
+                break
 
 
     def compute_gae(self):
-        """_summary_
+        """
+        TODO:
 
         Returns:
             _type_: _description_
@@ -248,7 +259,7 @@ class Agent_PPO():
         next_states = np.array([t.next_state for t in self.buffer])
 
         # Create a tensor for next_states
-        next_states_tensor = torch.FloatTensor(next_states).to(self.device)
+        next_states_tensor = torch.FloatTensor(next_states).to(self.device).div_(255.0)
         
         # Predict values for the whole set of next_states using the PPO Network in one-fell-swoop
         with torch.no_grad():
@@ -319,11 +330,11 @@ class Agent_PPO():
         log_probs_np = np.array([t.log_prob for t in self.buffer])
 
         # Convert all data to tensors
-        states_tensor = torch.FloatTensor(states_np).to(self.device) # TODO: Look into dividing this by 255
+        states_tensor = torch.FloatTensor(states_np).to(self.device).div_(255.0)
         actions_tensor = torch.FloatTensor(actions_np).to(self.device)
         old_log_probs_tensor = torch.FloatTensor(log_probs_np).to(self.device)
         returns_tensor = torch.FloatTensor(returns).to(self.device)
-        advantages_tensor = torch.FloatTensor(returns).to(self.device)
+        advantages_tensor = torch.FloatTensor(advantages).to(self.device)
 
         # Get Dataset (Buffer) Length
         # TODO: Later replace this line with buffer capacity
@@ -399,7 +410,7 @@ class Agent_PPO():
 
             # Logging Stats per epoch
             print(f"  Epoch {epoch + 1}/{self.ppo_epochs} - Actor Loss: {policy_loss.item():.4f}, "
-                    f"Value Loss: {value_loss.item():.4f}, Entropy: {entropy.item():.4f}")
+                    f"Value Loss: {value_loss.item():.4f}, Entropy: {entropy.mean().item():.4f}")
 
         
 
@@ -428,13 +439,19 @@ class Agent_PPO():
 
 
 
-    def _test_drive_env(self):
+    def test_drive(self):
         """
         TODO:
         """
 
         # Reset the env and get the first state
         state = self.env.reset()
+        self.env.save_state_img(
+            state,
+            "Image after resetting env",
+            "img_reset.png",
+            cmap="gray"
+        )
 
         total_reward = 0.0
 
@@ -446,5 +463,5 @@ class Agent_PPO():
 
         self.env.save_state_img(next_state[-1], 
                                 "Image after accelerating for 10 times", 
-                                "img.png", 
+                                "img_accelerate_10.png", 
                                 cmap = "gray")
