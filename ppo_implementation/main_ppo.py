@@ -44,10 +44,10 @@ def run(args):
         agent = Agent_PPO(env, args)
 
         # Train the PPO Agent
-        # agent.train()
+        agent.train()
 
         # Perform Test Drive
-        agent.test_drive()
+        # agent.test_drive()
 
     # If user requested testing mode
     if args.test_ppo:

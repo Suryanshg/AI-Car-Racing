@@ -369,11 +369,16 @@ class Agent_PPO():
 
                 # Unscale steering actions back to [0, 1] for log_prob calculations
                 # This is necessary as log of negative values is not a real number
-                # TODO: Look into clamping these for numerical stability later
-                batch_actions[:, 0] = (batch_actions[:, 0] + 1) / 2
+                current_batch_actions = batch_actions.clone()
+                current_batch_actions[:, 0] = (current_batch_actions[:, 0] + 1) / 2
+
+                # Clamp actions to avoid log(0) = -inf
+                # Beta distribution is defined on (0, 1). 
+                # 0.0 and 1.0 result in -inf log_prob if alpha/beta > 1
+                current_batch_actions = torch.clamp(current_batch_actions, 1e-6, 1.0 - 1e-6)
 
                 # Compute new_log_probs and entropy
-                batch_new_log_probs = beta_dist.log_prob(batch_actions).sum(dim = -1)
+                batch_new_log_probs = beta_dist.log_prob(current_batch_actions).sum(dim = -1)
                 entropy = beta_dist.entropy().sum(dim = -1) # TODO: Check if this is supposed to be sum or mean
 
                 # Squeeze values for returning later
