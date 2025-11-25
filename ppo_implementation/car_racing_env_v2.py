@@ -131,13 +131,21 @@ class CarRacingV3Wrapper(gym.Wrapper):
         """
         # TODO: Implement this
         return self.env.render()
+    
+
+    def close(self):
+        """
+        TODO:
+        """
+        self.env.close()
 
 
-    def _compute_green_penalty(self, rgb_img: np.ndarray) -> float:
-        """_summary_
+    def _compute_green_penalty(self, img: np.ndarray) -> float:
+        """
+        TODO:
 
         Args:
-            rgb_img (np.ndarray): _description_
+            mg (np.ndarray): _description_
 
         Returns:
             float: _description_

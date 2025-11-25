@@ -4,6 +4,7 @@ from arguments import get_args
 # from car_racing_env import CarRacingV3Wrapper
 from car_racing_env_v2 import CarRacingV3Wrapper
 from agent_ppo import Agent_PPO
+from eval_ppo import eval_ppo
 
 def parse():
     """
@@ -62,8 +63,8 @@ def run(args):
         # Initialize the PPO Agent
         agent = Agent_PPO(env, args)
 
-        # TODO: Implement and call the test function here
-        # test(agent, env, total_episodes=100, record_video=record_video)
+        # Run the evaluation method
+        eval_ppo(agent, env, total_episodes=10, record_video=args.record_video)
 
     # Stop the timer and print the runtime
     print(f"Total Runtime: {time.time() - start_time:.4f}s")

@@ -38,7 +38,6 @@ class Agent_PPO():
         self.entropy_coef = args.entropy_coef
         self.training_iterations = args.training_iterations
         self.buffer_capacity = args.buffer_capacity
-        # self.num_episodes = args.num_episodes
         self.max_episode_steps = args.max_episode_steps
 
         # Init Env Wrapper Args
@@ -66,6 +65,14 @@ class Agent_PPO():
 
         # Init Stats Tracking variables
         self.episode_rewards = deque(maxlen=100)
+
+        # If we init AgentPPO in test (inference) mode
+        # TODO: parameterize the path of the model here
+        if args.test_ppo:
+            print('loading trained model: ')
+            self.load_model('ppo_model_final.pth')
+            self.ppo_network.eval()
+            print('Loaded trained PPO Network successfully!')
 
 
     def train(self):
@@ -418,7 +425,6 @@ class Agent_PPO():
                     f"Value Loss: {value_loss.item():.4f}, Entropy: {entropy.mean().item():.4f}")
 
         
-
 
     def save_model(self, filename):
         """

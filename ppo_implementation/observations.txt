@@ -1,0 +1,4 @@
+1. The Value (critic) Loss seems to go below over multiple iterations.
+2. Entropy value is always negative
+3. Actor (Policy) loss is revolving around -1 and 1.
+4. The agent is not learning as after 100 iterations, it only produced mean rewards of -700.
