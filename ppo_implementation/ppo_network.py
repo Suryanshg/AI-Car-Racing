@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from typing import Tuple
 
+# TODO: Look into implementing returning Normal Distribution mean and log_std instead of Beta Dist
 class PPO_Network(nn.Module):
 
     def __init__(self, state_dim = (4, 96, 96), action_dim = 3):

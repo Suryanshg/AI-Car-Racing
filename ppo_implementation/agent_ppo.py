@@ -146,6 +146,8 @@ class Agent_PPO():
             log_prob: Log probability of the action (float)
             value: Value estimate of the state (float)
         """
+        # TODO: Put Network in Eval Mode
+
         # Convert state to float32 tensor
         state_tensor = torch.FloatTensor(state).unsqueeze(0).to(self.device).div_(255.0)    # (1, 4, 96, 96)
         
@@ -165,6 +167,7 @@ class Agent_PPO():
         # Compute log probability of the sampled action
         log_prob = beta_dist.log_prob(action).sum(dim = -1) # (1,)
 
+        # TODO: Check if action scaling is actually needed or not
         # Scale actions to appropriate ranges:
         # - Steering: [0, 1] -> [-1, 1]
         # - Gas: [0, 1] (already correct)
@@ -327,6 +330,7 @@ class Agent_PPO():
            e. Add entropy bonus (encourages exploration)
            f. Update network
         """
+        # TODO: Set Network to training mode
 
         # Compute advantages and returns from collected data
         advantages, returns = self.compute_gae()
@@ -374,11 +378,13 @@ class Agent_PPO():
                 # Create Beta Distribution
                 beta_dist = Beta(alpha, beta)
 
+                # TODO: Check if scaling is actually needed or not
                 # Unscale steering actions back to [0, 1] for log_prob calculations
                 # This is necessary as log of negative values is not a real number
                 current_batch_actions = batch_actions.clone()
                 current_batch_actions[:, 0] = (current_batch_actions[:, 0] + 1) / 2
 
+                # TODO: Remove this if we are not doing any scaling at all
                 # Clamp actions to avoid log(0) = -inf
                 # Beta distribution is defined on (0, 1). 
                 # 0.0 and 1.0 result in -inf log_prob if alpha/beta > 1
@@ -386,8 +392,9 @@ class Agent_PPO():
 
                 # Compute new_log_probs and entropy
                 batch_new_log_probs = beta_dist.log_prob(current_batch_actions).sum(dim = -1)
-                entropy = beta_dist.entropy().sum(dim = -1) # TODO: Check if this is supposed to be sum or mean
+                entropy = beta_dist.entropy().sum(dim = -1)
 
+                # TODO: Check if this is needed or not
                 # Squeeze values for returning later
                 batch_values = batch_values.squeeze() # (B,)
 
@@ -406,9 +413,12 @@ class Agent_PPO():
                 # Compute Value Loss (Critic Loss)
                 value_loss = self.loss_fn(batch_values, batch_returns)
 
+                # Compute Entropy Loss
+                entropy_loss = -torch.mean(entropy)
+
                 # Compute Total Loss
                 # Minimize Policy Loss + Value Loss - Entropy (to encourage exploration)
-                loss = policy_loss + (self.value_loss_coef * value_loss) - self.entropy_coef * entropy.mean()
+                loss = policy_loss + (self.value_loss_coef * value_loss) + (self.entropy_coef * entropy_loss)
 
                 # Perform Backpropagation
                 self.optim.zero_grad()
@@ -417,6 +427,7 @@ class Agent_PPO():
                 # Perform Gradient Clipping (prevents exploding gradients)
                 torch.nn.utils.clip_grad_norm_(self.ppo_network.parameters(), self.max_grad_norm)
 
+                # Update the weights
                 self.optim.step()
 
 
