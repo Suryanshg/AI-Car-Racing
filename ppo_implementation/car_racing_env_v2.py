@@ -43,7 +43,7 @@ class CarRacingV3Wrapper(gym.Wrapper):
                             continuous = continuous,
 
                             # TODO: check if this works
-                            max_episode_steps = args.max_episode_steps * args.action_repetition + 100
+                            max_episode_steps = args.max_episode_steps + 100
                             )
 
         # Convert to Grayscale (96, 96, 3) -> (96, 96)
@@ -60,7 +60,7 @@ class CarRacingV3Wrapper(gym.Wrapper):
 
 
 
-    def reset(self) -> np.ndarray:
+    def reset(self, seed = None, options = None) -> np.ndarray:
         """
         Wrapper method on top of the original reset method. Performs following operations:
         - Skips first 50 zoom-in frames of the CarRacing-v3 Environment.
@@ -73,7 +73,7 @@ class CarRacingV3Wrapper(gym.Wrapper):
         # TODO: [If Needed] Implement a way to capture reward memory and initialize it here 
 
         # Reset the env to get the starting state
-        state, info = self.env.reset() # state shape: (96, 96, 3)
+        state, info = self.env.reset(seed=seed, options = options) # state shape: (96, 96, 3)
 
         # Skip first 50 frames, as it involves zooming in by the env, 
         # which might confuse the Neural Network in order to learn
@@ -81,7 +81,7 @@ class CarRacingV3Wrapper(gym.Wrapper):
         for _ in range(50):
             state, _, _, _, _ = self.env.step(NO_OP_ACTION)
 
-        return state
+        return state, info
     
 
     def step(self, action: np.ndarray) -> Tuple[np.ndarray, float, bool, bool]:
@@ -122,7 +122,7 @@ class CarRacingV3Wrapper(gym.Wrapper):
             if done or truncated:
                 break
 
-        return next_state, total_reward, done, truncated
+        return next_state, total_reward, done, truncated, _
 
 
     def render(self):

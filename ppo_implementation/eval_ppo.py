@@ -42,7 +42,7 @@ def eval_ppo(agent, env, total_episodes = 10, record_video = False):
         episode_reward = 0.0
 
         # Init the env and get the first state
-        state = env.reset()
+        state, _ = env.reset()
 
         # Flags for checking if the episode is over
         truncated = False
@@ -55,7 +55,7 @@ def eval_ppo(agent, env, total_episodes = 10, record_video = False):
             action, _, _ = agent.select_action(state)
 
             # Take the step using the action in the env and observe the reward and next state
-            state, reward, done, truncated = env.step(action)
+            state, reward, done, truncated, _ = env.step(action)
 
             # Accumulate the reward
             episode_reward += reward

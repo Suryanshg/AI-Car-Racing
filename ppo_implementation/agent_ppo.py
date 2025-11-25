@@ -38,6 +38,7 @@ class Agent_PPO():
         self.entropy_coef = args.entropy_coef
         self.training_iterations = args.training_iterations
         self.buffer_capacity = args.buffer_capacity
+        self.num_episodes_to_collect = args.num_episodes_to_collect
         self.max_episode_steps = args.max_episode_steps
 
         # Init Env Wrapper Args
@@ -195,11 +196,11 @@ class Agent_PPO():
         # Reset the buffer
         self.reset_buffer()
         
-        # Collect episodes until buffer reaches capacity
-        episode = 0
-        while len(self.buffer) < self.buffer_capacity:
+        # Collect episodes
+        for episode in range(self.num_episodes_to_collect):
+
             # Begin an episode and get its first state
-            state = self.env.reset()
+            state, _ = self.env.reset()
 
             # Keep track of rewards in this episode
             episode_reward = 0
@@ -210,7 +211,7 @@ class Agent_PPO():
                 action, log_prob, value = self.select_action(state)
 
                 # Take the selected action in env
-                next_state, reward, done, truncated = self.env.step(action)
+                next_state, reward, done, truncated, _ = self.env.step(action)
                 
                 # Create the transition tuple
                 transition = Transition(
@@ -232,9 +233,9 @@ class Agent_PPO():
                 # Move to the next state
                 state = next_state
 
-                # Stop if buffer is full
-                if len(self.buffer) >= self.buffer_capacity:
-                    break
+                # # Stop if buffer is full
+                # if len(self.buffer) >= self.buffer_capacity:
+                #     break
                 
                 # Stop collecting data if episode is done or truncated
                 if done or truncated:
@@ -250,9 +251,9 @@ class Agent_PPO():
             # TODO: For some reason, the buffer size always grows in multiples of 119 per each iteration (5 iterations)
             print(f"Episode {episode} - Reward: {episode_reward:.2f}, Buffer Size: {len(self.buffer)}/{self.buffer_capacity}, Done: {done}, Truncated: {truncated}")
             
-            # Stop if buffer is full
-            if len(self.buffer) >= self.buffer_capacity:
-                break
+            # # Stop if buffer is full
+            # if len(self.buffer) >= self.buffer_capacity:
+            #     break
 
 
     def compute_gae(self):
@@ -467,7 +468,7 @@ class Agent_PPO():
         """
 
         # Reset the env and get the first state
-        state = self.env.reset()
+        state, _ = self.env.reset()
         self.env.save_state_img(
             state,
             "Image after resetting env",
@@ -479,7 +480,7 @@ class Agent_PPO():
 
         # Do Full Gas Action for 10 times
         for i in range(11):
-            next_state, reward, done, truncated = self.env.step(np.array([0.0, 2.0, 0.0]))
+            next_state, reward, done, truncated, _ = self.env.step(np.array([0.0, 2.0, 0.0]))
             total_reward += reward
             print(f"Step {i+1} - Reward: {reward}, Total Reward: {total_reward}")
 
