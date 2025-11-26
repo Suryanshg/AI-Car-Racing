@@ -4,10 +4,7 @@ import matplotlib.pyplot as plt
 from collections import deque
 from argparse import Namespace
 from typing import Tuple
-from gymnasium.wrappers import FrameStackObservation, GrayscaleObservation, TimeLimit
-
-# Array to compute grayscale images from rgb images
-STD_LUMINOSITY_FORMULA_ARR = np.array([0.299, 0.587, 0.114])
+from gymnasium.wrappers import FrameStackObservation, GrayscaleObservation
 
 # Standard NO OP Action for the car
 NO_OP_ACTION = np.array([0.0, 0.0, 0.0])

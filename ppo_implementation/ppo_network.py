@@ -83,3 +83,8 @@ class PPO_Network(nn.Module):
         return (alpha, beta), value
         
 
+# Driver code to only print the architectures
+if __name__ == '__main__':
+    network = PPO_Network()
+    print(network)
+

@@ -184,6 +184,7 @@ class Agent_PPO():
     
 
     # TODO: Check if this implementation for collecting episodes is good or not
+    # TODO: Look into parallelizing this 
     def collect_episodes(self):
         """
         Collect trajectories by running current policy in the environment.
