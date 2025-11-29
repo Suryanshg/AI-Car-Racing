@@ -1,4 +1,6 @@
-/logs
+bc-logs/
+*.pth
+*.pt
 
 # Ignore .venv
 .venv
