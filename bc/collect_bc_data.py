@@ -61,8 +61,9 @@ if __name__ == "__main__":
     length = 0
     data_obs = []
     data_act = []
+    data_rew = []
+    data_done = []
     save_run = False
-    done = False
     running = True
     clock = pygame.time.Clock()
     # loop while running or the episode is not done
@@ -80,15 +81,19 @@ if __name__ == "__main__":
 
         keys = pygame.key.get_pressed()
         action = get_action(keys)
+
+        next_obs, reward, terminated, truncated, info = env.step(action)
+        done = terminated or truncated
         data_obs.append(obs)
         data_act.append(action)
-
-        obs, reward, terminated, truncated, info = env.step(action)
+        data_rew.append(reward)
+        data_done.append(done)
+        obs = next_obs
 
         total_reward += reward
         length += 1
-        print(length, obs.shape, reward, total_reward, "ACTION:", action)
-        if terminated:
+        print(length, reward, total_reward, "ACTION:", action)
+        if done:
             print("")
             print("Episode ended!", terminated)
             running = False
@@ -99,7 +104,7 @@ if __name__ == "__main__":
     pygame.quit()
     # to save or not to save
     # total possible length
-    if length < 950 and terminated:
+    if length < 950 and done:
         save_run = True
         output_folder = f"{save_folder}/excellent_runs/"
     else:
@@ -110,12 +115,18 @@ if __name__ == "__main__":
             output_folder = f"{save_folder}/700_runs/"
         else:
             save_run = False
-    if save_run and terminated and total_reward > 700:
+    if save_run and done and total_reward > 700:
         os.makedirs(output_folder, exist_ok=True)
         # save data with name in filename
         id = "".join(random.choices(string.ascii_lowercase + string.digits, k=4))
         output_filename = output_folder + f"{id}_bc.npz"
-        np.savez(output_filename, obs=np.array(data_obs), actions=np.array(data_act))
+        np.savez(
+            output_filename,
+            obs=np.array(data_obs),
+            actions=np.array(data_act),
+            rewards=np.array(data_rew),
+            dones=np.array(data_done),
+        )
         print(f"Data saved to {output_filename}")
         print(f"Total observations collected: {len(data_obs)}")
         print(f"Observation shape: {np.array(data_obs).shape}")

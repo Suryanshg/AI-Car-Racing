@@ -1,17 +1,64 @@
-import numpy as np
 import torch
+import numpy as np
+from environment_framestacking import CarRacingV3Wrapper
+from stable_baselines3 import A2C
+from torch.utils.data import Dataset, DataLoader
+from stable_baselines3.common.policies import ActorCriticCnnPolicy
+from torch.distributions import Normal
+import matplotlib.pyplot as plt
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import Dataset, DataLoader
-from environment_framestacking import CarRacingV3Wrapper
 import argparse
-from pathlib import Path
-import matplotlib.pyplot as plt
 import gc
 import os
 
 
-class MemoryMappedBCDataset(Dataset):
+class ActorCriticCNN(nn.Module):
+    def __init__(self, action_dim=3):
+        super().__init__()
+
+        self.cnn = nn.Sequential(
+            nn.Conv2d(4, 32, kernel_size=8, stride=4),
+            nn.ReLU(),
+            nn.Conv2d(32, 64, kernel_size=4, stride=2),
+            nn.ReLU(),
+            nn.Conv2d(64, 64, kernel_size=3, stride=1),
+            nn.ReLU(),
+            nn.Flatten(),
+        )
+
+        # cnn output size
+        n_flat = 32 * 2 * 7 * 7
+
+        # shared MLP
+        self.fc = nn.Sequential(nn.Linear(n_flat, 512), nn.ReLU())
+
+        # actor
+        self.mu = nn.Linear(512, action_dim)
+        self.log_std = nn.Parameter(torch.zeros(action_dim))
+
+        # critic
+        self.value = nn.Linear(512, 1)
+
+    def forward(self, x):
+        x = x / 255.0  # normalize input
+        features = self.fc(self.cnn(x))
+
+        mu = self.mu(features)
+        # Constrain outputs
+        steer = torch.tanh(mu[:, 0])  # Steering between -1 and 1
+        gas = torch.sigmoid(mu[:, 1])  # Gas between 0 and 1
+        brake = torch.sigmoid(mu[:, 2])  # Brake between 0 and 1
+        mu = torch.stack([steer, gas, brake], dim=1)
+        # std
+        std = torch.exp(self.log_std)
+        # value
+        value = self.value(features)
+
+        return mu, std, value
+
+
+class PretrainBCDataset(Dataset):
 
     def __init__(self, data_file, indices=None):
         """
@@ -23,6 +70,7 @@ class MemoryMappedBCDataset(Dataset):
         self.data = np.load(data_file, mmap_mode="r")
         self.obs = self.data["obs"]
         self.actions = self.data["actions"]
+        self.returns = self.data["returns"]
 
         if indices is not None:
             self.indices = indices
@@ -37,162 +85,27 @@ class MemoryMappedBCDataset(Dataset):
         # Load single sample from disk
         obs = torch.FloatTensor(self.obs[actual_idx].copy())
         action = torch.FloatTensor(self.actions[actual_idx].copy())
-        return obs, action
+        ret = torch.FloatTensor([self.returns[actual_idx].copy()])
+        return obs, action, ret
 
 
-class CNNPolicy(nn.Module):
-    """
-    Custom CNN policy for behavior cloning.
-
-    Architecture:
-    - 3 Convolutional layers for feature extraction
-    - 2 Fully connected layers
-    - Constrained output layer (tanh for steering, sigmoid for gas/brake)
-    """
-
-    def __init__(self, input_channels=4, dropout=0.4, rnn=True):
-        super(CNNPolicy, self).__init__()
-
-        # CNN Feature Extractor
-        # Input: (batch, 4, 84, 84) or (batch*4, 84, 84)
-        n_kernels = 8 if rnn else 32
-        input_channels = 1 if rnn else input_channels
-        self.conv1 = nn.Conv2d(
-            input_channels, n_kernels, kernel_size=8, stride=4
-        )  # -> (32, 20, 20)
-        self.conv2 = nn.Conv2d(
-            n_kernels, n_kernels * 2, kernel_size=4, stride=2
-        )  # -> (64, 9, 9)
-        self.conv3 = nn.Conv2d(
-            n_kernels * 2, n_kernels * 2, kernel_size=3, stride=1
-        )  # -> (64, 7, 7)
-        cnn_out_dim = n_kernels * 2 * 7 * 7
-        # RNN
-        if rnn:
-            self.rnn = nn.LSTM(
-                input_size=cnn_out_dim, hidden_size=512, batch_first=True
-            )
-        else:
-            self.fc1 = nn.Linear(cnn_out_dim, 512)
-        # Fully connected layers
-        self.fc2 = nn.Linear(512, 256)
-        self.out = nn.Linear(256, 3)
-
-        # Batch normalization
-        self.bn1 = nn.BatchNorm2d(n_kernels)
-        self.bn2 = nn.BatchNorm2d(n_kernels * 2)
-        self.bn3 = nn.BatchNorm2d(n_kernels * 2)
-
-        # Dropout for regularization
-        self.dropout = nn.Dropout(dropout)
-
-        # Activation
-        self.relu = nn.ReLU()
-        self.with_rnn = rnn
-
-    def forward(self, x):
-        x = x / 255.0  # Normalize input
-        if self.with_rnn:
-            batch_size, seq_len, H, W = x.size()
-            x = x.view(batch_size * seq_len, H, W).unsqueeze(1)  # (B*S, 1, H, W)
-        # Convolutional layers with batch norm and ReLU
-        x = self.relu(self.bn1(self.conv1(x)))
-        x = self.relu(self.bn2(self.conv2(x)))
-        x = self.relu(self.bn3(self.conv3(x)))
-
-        # Flatten
-        x = x.view(x.size(0), -1)
-
-        if self.with_rnn:
-            x = x.view(batch_size, seq_len, -1)
-            x, _ = self.rnn(x)
-            x = x[:, -1]  # Take last output
-        else:
-            x = self.relu(self.fc1(x))
-            x = self.dropout(x)
-        # Fully connected layers
-        x = self.relu(self.fc2(x))
-        x = self.dropout(x)
-        x = self.out(x)
-        # Constrain outputs
-        steer = torch.tanh(x[:, 0])  # Steering between -1 and 1
-        gas = torch.sigmoid(x[:, 1])  # Gas between 0 and 1
-        brake = torch.sigmoid(x[:, 2])  # Brake between 0 and 1
-        x = torch.stack([steer, gas, brake], dim=1)
-
-        return x
-
-
-def load_expert_data(data_file):
-    print(f"Loading data from {data_file} (memory-mapped)...")
-    data = np.load(data_file, mmap_mode="r")
-    obs = data["obs"]
-    actions = data["actions"]
-
-    print(f"Dataset size: {len(obs)} samples")
-    print(f"Observation shape: {obs.shape}")
-    print(f"Actions shape: {actions.shape}")
-
-    # Compute statistics without loading all data
-    print("\nComputing action statistics (sampled)...")
-    sample_size = min(10000, len(actions))
-    sample_indices = np.random.choice(len(actions), sample_size, replace=False)
-    actions_sample = actions[sample_indices]
-
-    print(
-        f"Steering - Mean: {actions_sample[:, 0].mean():.3f}, Std: {actions_sample[:, 0].std():.3f}"
-    )
-    print(
-        f"Gas - Mean: {actions_sample[:, 1].mean():.3f}, Std: {actions_sample[:, 1].std():.3f}"
-    )
-    print(
-        f"Brake - Mean: {actions_sample[:, 2].mean():.3f}, Std: {actions_sample[:, 2].std():.3f}"
-    )
-
-    return data_file  # Return file path instead of loaded data
-
-
-def train_bc(
-    data_file,
-    epochs=100,
-    batch_size=64,
-    learning_rate=1e-4,
-    val_split=0.1,
-    device="auto",
-    save_path="bc_policy",
-    weight_decay=1e-5,
-    dropout=0.4,
-    with_rnn=True,
-):
-    # check/create save path
-    save_folder = os.path.dirname(save_path)
-    if save_folder != "":
-        os.makedirs(save_folder, exist_ok=True)
-    # Handle device
-    if device == "auto":
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-
-    print(f"Using device: {device}")
-
-    # Load data info (not the actual data)
-    data_file_path = load_expert_data(data_file)
-
+def get_dataloaders(data_file, val_split, batch_size):
     # Get dataset size
-    with np.load(data_file_path, mmap_mode="r") as data:
+    with np.load(data_file, mmap_mode="r") as data:
         n_samples = len(data["obs"])
 
     # Split into train and validation
     n_val = int(n_samples * val_split)
     n_train = n_samples - n_val
+    print(f"Training samples: {n_train}, Validation samples: {n_val}")
 
     indices = np.random.permutation(n_samples)
     train_indices = indices[:n_train]
     val_indices = indices[n_train:]
 
     # Create memory-mapped datasets
-    train_dataset = MemoryMappedBCDataset(data_file_path, train_indices)
-    val_dataset = MemoryMappedBCDataset(data_file_path, val_indices)
-
+    train_dataset = PretrainBCDataset(data_file, train_indices)
+    val_dataset = PretrainBCDataset(data_file, val_indices)
     # Use smaller number of workers and prefetch
     train_loader = DataLoader(
         train_dataset,
@@ -210,12 +123,37 @@ def train_bc(
         pin_memory=True,
         prefetch_factor=2,
     )
+    return train_loader, val_loader
 
-    print(f"Training samples: {n_train}, Validation samples: {n_val}")
+
+def train_bc(
+    data_file,
+    epochs=100,
+    batch_size=64,
+    learning_rate=1e-4,
+    val_split=0.1,
+    device="auto",
+    save_path="bc_policy",
+    weight_decay=1e-5,
+    dropout=0.4,
+    lambda_val=0.5,
+):
+    # check/create save path
+    save_folder = os.path.dirname(save_path)
+    if save_folder != "":
+        os.makedirs(save_folder, exist_ok=True)
+    # Handle device
+    if device == "auto":
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+
+    print(f"Using device: {device}")
+    train_loader, val_loader = get_dataloaders(data_file, val_split, batch_size)
 
     # Create custom CNN policy
     print(f"\nInitializing custom CNN policy...")
-    policy = CNNPolicy(dropout=dropout, rnn=with_rnn)
+    env = CarRacingV3Wrapper()
+    # Just a dummy policy to get the architecture and train loop right
+    policy = ActorCriticCNN()
     policy.to(device)
 
     # Print model architecture
@@ -226,7 +164,6 @@ def train_bc(
     print(f"\nTotal parameters: {total_params:,}")
     print(f"Trainable parameters: {trainable_params:,}")
 
-    # Use optimizer with weight decay
     optimizer = optim.Adam(
         policy.parameters(), lr=learning_rate, weight_decay=weight_decay
     )
@@ -234,9 +171,6 @@ def train_bc(
     # Learning rate scheduler
     # scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=20, eta_min=1e-6)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode="min")
-
-    # Use MSE loss
-    criterion = nn.MSELoss()
 
     # Training history
     train_losses = []
@@ -251,15 +185,25 @@ def train_bc(
         # Training
         policy.train()
         train_loss = 0.0
-        for batch_obs, batch_actions in train_loader:
+        for batch_obs, batch_actions, batch_returns in train_loader:
             batch_obs = batch_obs.to(device, non_blocking=True)
             batch_actions = batch_actions.to(device, non_blocking=True)
-
+            batch_returns = batch_returns.to(device, non_blocking=True)
             optimizer.zero_grad()
 
             # Forward pass
-            predicted_actions = policy(batch_obs)
-            loss = criterion(predicted_actions, batch_actions)
+            mu, std, value = policy(batch_obs)
+            # # actor loss
+            # dist = Normal(mu, std)
+            # actor_loss = -dist.log_prob(batch_actions).sum(-1).mean()
+            actor_loss = nn.functional.mse_loss(mu, batch_actions)
+
+            # critic loss
+            critic_loss = nn.functional.mse_loss(
+                value.squeeze(), batch_returns.squeeze()
+            )
+            loss = actor_loss + lambda_val * critic_loss
+            # print(actor_loss.item(), critic_loss.item())
 
             # Backward pass
             loss.backward()
@@ -268,7 +212,7 @@ def train_bc(
             torch.nn.utils.clip_grad_norm_(policy.parameters(), max_norm=1.0)
 
             optimizer.step()
-
+            # just for logging
             train_loss += loss.item()
 
             # Clear cache periodically
@@ -282,12 +226,19 @@ def train_bc(
         policy.eval()
         val_loss = 0.0
         with torch.no_grad():
-            for batch_obs, batch_actions in val_loader:
+            for batch_obs, batch_actions, batch_returns in val_loader:
                 batch_obs = batch_obs.to(device, non_blocking=True)
                 batch_actions = batch_actions.to(device, non_blocking=True)
-
-                predicted_actions = policy(batch_obs)
-                loss = criterion(predicted_actions, batch_actions)
+                batch_returns = batch_returns.to(device, non_blocking=True)
+                mu, std, value = policy(batch_obs)
+                # actor loss
+                dist = Normal(mu, std)
+                actor_loss = -dist.log_prob(batch_actions).sum(-1).mean()
+                # critic loss
+                critic_loss = nn.functional.mse_loss(
+                    value.squeeze(), batch_returns.squeeze()
+                )
+                loss = actor_loss + lambda_val * critic_loss
                 val_loss += loss.item()
 
         # Clear cache after validation
@@ -296,7 +247,6 @@ def train_bc(
 
         val_loss /= len(val_loader)
         val_losses.append(val_loss)
-
         # Update learning rate
         scheduler.step(val_loss)
 
@@ -322,7 +272,6 @@ def train_bc(
         # Force garbage collection every 10 epochs
         if (epoch + 1) % 10 == 0:
             gc.collect()
-        scheduler.step()  # step scheduler
 
     print("=" * 60)
     print("Training complete!")
@@ -331,7 +280,7 @@ def train_bc(
     # Save final model
     torch.save(
         {
-            "epoch": epochs,
+            "epoch": epoch,
             "model_state_dict": policy.state_dict(),
             "optimizer_state_dict": optimizer.state_dict(),
             "val_loss": val_loss,
@@ -363,7 +312,6 @@ def evaluate_bc(
     render=False,
     device="auto",
     use_best=False,
-    with_rnn=True,
 ):
     # Handle device
     if device == "auto":
@@ -382,7 +330,8 @@ def evaluate_bc(
     model_file = f"{model_path}_best.pth" if use_best else f"{model_path}.pth"
     print(f"Loading policy from {model_file}...")
 
-    policy = CNNPolicy(rnn=with_rnn)
+    # Just a dummy policy to get the architecture and train loop right
+    policy = ActorCriticCNN()
     checkpoint = torch.load(model_file, map_location=device)
     policy.load_state_dict(checkpoint["model_state_dict"])
     policy.to(device)
@@ -409,7 +358,8 @@ def evaluate_bc(
             obs_tensor = torch.FloatTensor(obs).unsqueeze(0).to(device)
 
             with torch.no_grad():
-                action = policy(obs_tensor).cpu().numpy()[0]
+                mu, std, value = policy(obs_tensor)
+                action = mu.cpu().numpy()[0]  # use mean action predictions
                 action = np.clip(
                     action,
                     np.array([-1.0, 0.0, 0.0]),
@@ -476,7 +426,10 @@ if __name__ == "__main__":
         help="Path to combined BC data file",
     )
     parser.add_argument(
-        "--model-path", type=str, default="bc_policy", help="Path to save/load model"
+        "--model-path",
+        type=str,
+        default="a2c_bc_pretrain",
+        help="Path to save/load model",
     )
     parser.add_argument(
         "--epochs", type=int, default=100, help="Number of training epochs"
@@ -488,6 +441,9 @@ if __name__ == "__main__":
         "--learning-rate", type=float, default=1e-5, help="Learning rate"
     )
     parser.add_argument(
+        "--lambda-val", type=float, default=0.5, help="Weight for critic loss"
+    )
+    parser.add_argument(
         "--val-split", type=float, default=0.1, help="Validation split ratio"
     )
     parser.add_argument(
@@ -496,9 +452,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--render", action="store_true", help="Enable rendering during evaluation"
     )
-    parser.add_argument(
-        "--with-rnn", action="store_true", help="Enable RNN in the model"
-    )
+
     parser.add_argument(
         "--device", type=str, default="auto", help="Device to use (auto/cuda/cpu)"
     )
@@ -526,7 +480,7 @@ if __name__ == "__main__":
             save_path=args.model_path,
             weight_decay=args.weight_decay,
             dropout=args.dropout,
-            with_rnn=args.with_rnn,
+            lambda_val=args.lambda_val,
         )
 
     if args.mode in ["eval", "both"]:
@@ -537,5 +491,4 @@ if __name__ == "__main__":
             render=args.render,
             device=args.device,
             use_best=args.use_best,
-            with_rnn=args.with_rnn,
         )
