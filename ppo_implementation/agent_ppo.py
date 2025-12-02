@@ -8,6 +8,8 @@ from torch.distributions import Beta
 from collections import namedtuple
 import random
 from tqdm import tqdm
+from torch.utils.tensorboard import SummaryWriter
+
 
 # Define the structure of a single transition
 Transition = namedtuple('Transition', 
@@ -69,6 +71,9 @@ class Agent_PPO():
         # Init Stats Tracking variables
         self.episode_rewards = deque(maxlen=100)
 
+        # Init SummaryWriter for TensorBoard
+        self.tb_writer = SummaryWriter(log_dir="runs/ppo")
+
         # If we init AgentPPO in test (inference) mode
         # TODO: parameterize the path of the model here
         if args.test_ppo:
@@ -109,6 +114,7 @@ class Agent_PPO():
             # Log progress
             if (iteration + 1) % self.log_freq == 0:
                 avg_reward = np.mean(self.episode_rewards)
+                self.tb_writer.add_scalar('train/avg_reward', avg_reward, iteration + 1)
                 print(f"\nAverage Reward (last 100 episodes): {avg_reward:.2f}")
             
             # Save model checkpoint

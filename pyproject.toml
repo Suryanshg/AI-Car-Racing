@@ -9,5 +9,6 @@ dependencies = [
     "moviepy>=2.2.1",
     "stable-baselines3>=2.7.0",
     "swig>=4.4.0",
+    "tensorboard>=2.20.0",
     "tqdm>=4.67.1",
 ]
