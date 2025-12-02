@@ -6,12 +6,13 @@ from ppo_network import PPO_Network
 from collections import deque
 from torch.distributions import Beta
 from collections import namedtuple
+import random
+from tqdm import tqdm
 
 # Define the structure of a single transition
 Transition = namedtuple('Transition', 
     ['state', 'action', 'log_prob', 'reward', 'next_state', 'done', 'value']
 )
-
 
 class Agent_PPO():
     def __init__(self, env: CarRacingV3Wrapper, args):
@@ -53,6 +54,7 @@ class Agent_PPO():
         # Set Random Seeds
         torch.manual_seed(self.seed)
         np.random.seed(self.seed)
+        random.seed(self.seed)
 
         # Init Deep Learning Model
         self.ppo_network = PPO_Network().to(self.device)
@@ -71,7 +73,7 @@ class Agent_PPO():
         # TODO: parameterize the path of the model here
         if args.test_ppo:
             print('loading trained model: ')
-            self.load_model('ppo_model_final.pth')
+            self.load_model('checkpoints/ppo_model_final.pth')
             self.ppo_network.eval()
             print('Loaded trained PPO Network successfully!')
 
@@ -91,7 +93,7 @@ class Agent_PPO():
         print(f"Training for {self.training_iterations} iterations")
         
         # For each training iteration
-        for iteration in range(self.training_iterations):
+        for iteration in tqdm(range(self.training_iterations)):
             print(f"\n{'='*60}")
             print(f"Iteration {iteration + 1}/{self.training_iterations}")
             print(f"{'='*60}")
@@ -111,12 +113,12 @@ class Agent_PPO():
             
             # Save model checkpoint
             if (iteration + 1) % self.save_freq == 0:
-                self.save_model(f"ppo_model_iter_{iteration + 1}.pth")
+                self.save_model(f"checkpoints/ppo_model_iter_{iteration + 1}.pth")
         
         print("\n" + "="*60)
         print("Training completed!")
         print("="*60)
-        self.save_model("ppo_model_final.pth")
+        self.save_model("checkpoints/ppo_model_final.pth")
         
 
 

@@ -2,9 +2,11 @@ from tqdm import tqdm
 from gymnasium.wrappers import RecordVideo
 import time
 import numpy as np
+from agent_ppo import Agent_PPO
+import random, torch
 
 
-def eval_ppo(agent, env, total_episodes = 10, record_video = False):
+def eval_ppo(agent: Agent_PPO, env, total_episodes = 10, record_video = False):
     """
     TODO:
 
@@ -36,13 +38,21 @@ def eval_ppo(agent, env, total_episodes = 10, record_video = False):
     start_time = time.time()
     
     # Iterate over total_episodes times
-    for _ in tqdm(range(total_episodes)):
+    for ep_idx in tqdm(range(total_episodes)):
+
+        # Determine a seed for episode
+        episode_seed = agent.seed + ep_idx
+
+        # Reseed all RNGs so stochastic action sampling is reproducible
+        random.seed(episode_seed)
+        np.random.seed(episode_seed)
+        torch.manual_seed(episode_seed)
 
         # Init reward for this episode
         episode_reward = 0.0
 
         # Init the env and get the first state
-        state, _ = env.reset()
+        state, _ = env.reset(seed = episode_seed)
 
         # Flags for checking if the episode is over
         truncated = False
