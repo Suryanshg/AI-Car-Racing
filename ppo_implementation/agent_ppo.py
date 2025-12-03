@@ -255,14 +255,7 @@ class Agent_PPO():
 
             # Log the episode's reward
             episode += 1
-            
-
-            # TODO: For some reason, the buffer size always grows in multiples of 119 per each iteration (5 iterations)
-            print(f"Episode {episode} - Reward: {episode_reward:.2f}, Buffer Size: {len(self.buffer)}/{self.buffer_capacity}, Done: {done}, Truncated: {truncated}")
-            
-            # # Stop if buffer is full
-            # if len(self.buffer) >= self.buffer_capacity:
-            #     break
+            print(f"Episode {episode} - Reward: {episode_reward:.2f}, Buffer Size: {len(self.buffer)}, Done: {done}, Truncated: {truncated}")
 
 
     def compute_gae(self):
