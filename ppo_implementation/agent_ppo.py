@@ -78,7 +78,7 @@ class Agent_PPO():
         # TODO: parameterize the path of the model here
         if args.test_ppo:
             print('loading trained model: ')
-            self.load_model('checkpoints/ppo_model_final_config2.pth')
+            self.load_model('checkpoints/ppo_model_final.pth')
             self.ppo_network.eval()
             print('Loaded trained PPO Network successfully!')
 
