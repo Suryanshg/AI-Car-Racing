@@ -3,7 +3,7 @@ def get_args(parser):
     TODO:
     '''
     # Deep Learning Hyperparameters (TODO: Double check if all are used here)
-    parser.add_argument('--lr', type=float, default=2.5e-4, help='learning rate') # TODO: Might wanna try 2.5e-4
+    parser.add_argument('--lr', type=float, default=1e-4, help='learning rate') # TODO: Might wanna try 2.5e-4
     parser.add_argument('--batch_size', type=int, default=128, help='batch size') # TODO: Can try 64
 
     # PPO Hyperparameters (TODO: Double check if all are used here)
