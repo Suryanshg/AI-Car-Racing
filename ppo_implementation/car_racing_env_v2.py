@@ -1,7 +1,6 @@
 import gymnasium as gym
 import numpy as np
 import matplotlib.pyplot as plt
-from collections import deque
 from argparse import Namespace
 from typing import Tuple
 from gymnasium.wrappers import FrameStackObservation, GrayscaleObservation
