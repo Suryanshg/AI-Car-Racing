@@ -75,7 +75,7 @@ class CarRacingV3Wrapper(gym.Wrapper):
         # which might confuse the Neural Network in order to learn
         # the right action for a given state
         for _ in range(50):
-            state, _, _, _, _ = self.env.step(NO_OP_ACTION)
+            state, _, _, _, info = self.env.step(NO_OP_ACTION)
 
         return state, info
     
@@ -105,7 +105,7 @@ class CarRacingV3Wrapper(gym.Wrapper):
 
         # Repeat action for the self.action_repetition times
         for _ in range(self.action_repetition):
-            next_state, reward, done, truncated, _ = self.env.step(action)
+            next_state, reward, done, truncated, info = self.env.step(action)
 
             # TODO: Implement Reward Augmentations here
             # Examples: Green Penalty, Die Penalty Removal etc.
@@ -118,7 +118,7 @@ class CarRacingV3Wrapper(gym.Wrapper):
             if done or truncated:
                 break
 
-        return next_state, total_reward, done, truncated, _
+        return next_state, total_reward, done, truncated, info
 
 
     def render(self):
