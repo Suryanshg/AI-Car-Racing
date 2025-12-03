@@ -86,7 +86,7 @@ class CarRacingV3Wrapper(gym.Wrapper):
         Wrapper method on top of original step method, which allows the agent to take an
         action in the current state and move to the next state. At a high level, it does
         the following:
-        - Repeats the input action multiple times (according to action_repetion supplied for args in the constructor)
+        - Repeats the input action multiple times (according to action_repetition supplied for args in the constructor)
         - Accumulates the Total Reward after executing each action
         - Converts the final state after action repetition into grayscale
         - Pushes the final state into the stack frame
