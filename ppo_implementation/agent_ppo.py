@@ -69,7 +69,7 @@ class Agent_PPO():
         self.buffer = []
 
         # Init Stats Tracking variables
-        self.episode_rewards = deque(maxlen=100)
+        self.episode_rewards = deque(maxlen=self.num_episodes_to_collect)
 
         # Init SummaryWriter for TensorBoard
         self.tb_writer = SummaryWriter(log_dir="runs/ppo")
@@ -78,7 +78,7 @@ class Agent_PPO():
         # TODO: parameterize the path of the model here
         if args.test_ppo:
             print('loading trained model: ')
-            self.load_model('checkpoints/ppo_model_final.pth')
+            self.load_model('checkpoints/ppo_model_final_config2.pth')
             self.ppo_network.eval()
             print('Loaded trained PPO Network successfully!')
 
