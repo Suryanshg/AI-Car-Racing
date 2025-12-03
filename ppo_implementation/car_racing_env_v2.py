@@ -3,7 +3,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from argparse import Namespace
 from typing import Tuple
-from gymnasium.wrappers import FrameStackObservation, GrayscaleObservation
+from gymnasium.wrappers import (
+    FrameStackObservation, 
+    GrayscaleObservation, 
+    ResizeObservation
+)
 
 # Standard NO OP Action for the car
 NO_OP_ACTION = np.array([0.0, 0.0, 0.0])
@@ -15,7 +19,8 @@ class CarRacingV3Wrapper(gym.Wrapper):
                  env_name = "CarRacing-v3",
                  render_mode = None,
                  lap_complete_percent = 0.95,
-                 continuous = True):
+                 continuous = True,
+                 resize_shape: Tuple[int, int] = (84, 84)):
         """
         Constructor for initializing the CarRacingV3Wrapper.
 
@@ -44,6 +49,9 @@ class CarRacingV3Wrapper(gym.Wrapper):
 
         # Convert to Grayscale (96, 96, 3) -> (96, 96)
         self.env = GrayscaleObservation(self.env, keep_dim=False)
+
+        # Resize the img dimensions to resize_shape (96, 96) -> (84, 84)
+        self.env = ResizeObservation(self.env, resize_shape)
 
         # Stack Frames (96, 96) -> (k, 96, 96)
         self.env = FrameStackObservation(self.env, stack_size=args.frame_stack_size)

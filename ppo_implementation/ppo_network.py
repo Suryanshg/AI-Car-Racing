@@ -17,7 +17,7 @@ class PPO_Network(nn.Module):
 
         # Shared Convolutional Feature Extractor
         self.conv = nn.Sequential(
-            nn.Conv2d(state_dim[0], 32, kernel_size = 8, stride = 4),       # (N, 32, 23, 23)
+            nn.Conv2d(state_dim[0], 32, kernel_size = 8, stride = 4),       # (N, 32, H//4, W//2)
             nn.ReLU(),
             
             nn.Conv2d(32, 64, kernel_size = 4, stride = 2),                 # (N, 64, 10, 10)
@@ -30,11 +30,12 @@ class PPO_Network(nn.Module):
         )
 
         # TODO: Instead of hard coding, use a method to dynamically compute this
-        conv_out_size = 64 * 8 * 8
+        # conv_out_size = 64 * 8 * 8
 
         # FC Layer for the Actor Head
         self.actor_fc = nn.Sequential(
-            nn.Linear(conv_out_size, 256),
+            # nn.Linear(conv_out_size, 256),
+            nn.LazyLinear(256),
             nn.ReLU()
         )
 
@@ -51,7 +52,8 @@ class PPO_Network(nn.Module):
 
         # FC Layer for Critic Head
         self.critic_fc = nn.Sequential(
-            nn.Linear(conv_out_size, 256),
+            # nn.Linear(conv_out_size, 256),
+            nn.LazyLinear(256),
             nn.ReLU(),
             nn.Linear(256, 1)
         )
