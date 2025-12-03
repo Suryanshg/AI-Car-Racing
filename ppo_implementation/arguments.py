@@ -5,8 +5,6 @@ def get_args(parser):
     # Deep Learning Hyperparameters (TODO: Double check if all are used here)
     parser.add_argument('--lr', type=float, default=1e-4, help='learning rate') # TODO: Might wanna try 2.5e-4
     parser.add_argument('--batch_size', type=int, default=128, help='batch size') # TODO: Can try 64
-    parser.add_argument('--grad_clip_value', type=float, default=0.5, help='max grad value')
-    parser.add_argument('--train_freq', type=int, default=4, help='Train every N steps')
 
     # PPO Hyperparameters (TODO: Double check if all are used here)
     parser.add_argument('--gamma', type=float, default=0.99, help='discount factor')
