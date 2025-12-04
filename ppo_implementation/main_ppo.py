@@ -43,7 +43,7 @@ def run(args):
         env = CarRacingV3Wrapper(args=args)
 
         # Stack Frames (96, 96) -> (4, 96, 96)
-        # env = FrameStackObservation(env, stack_size=args.frame_stack_size)
+        env = FrameStackObservation(env, stack_size=args.frame_stack_size)
 
         # Initialize the PPO Agent
         agent = Agent_PPO(env, args)
@@ -65,7 +65,7 @@ def run(args):
         env = CarRacingV3Wrapper(render_mode=render_mode_value, args=args)
 
         # Stack Frames (96, 96) -> (4, 96, 96)
-        # env = FrameStackObservation(env, stack_size=args.frame_stack_size)
+        env = FrameStackObservation(env, stack_size=args.frame_stack_size)
 
         # Initialize the PPO Agent
         agent = Agent_PPO(env, args)

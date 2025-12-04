@@ -52,7 +52,7 @@ class CarRacingV3Wrapper(gym.Wrapper):
         # self.env = ResizeObservation(self.env, resize_shape)
 
         # Stack Frames (96, 96) -> (k, 96, 96)
-        self.env = FrameStackObservation(self.env, stack_size=args.frame_stack_size)
+        # self.env = FrameStackObservation(self.env, stack_size=args.frame_stack_size)
 
         # Call the Parent Class Constructor
         super().__init__(self.env)
@@ -113,7 +113,7 @@ class CarRacingV3Wrapper(gym.Wrapper):
         for _ in range(self.action_repetition):
             next_state, reward, done, truncated, info = self.env.step(action)
 
-            # TODO: Implement Reward Augmentations here
+            # TODO: Implement Reward Shaping here
             # Examples: Green Penalty, Die Penalty Removal etc.
             # self._compute_green_penalty(next_state_rgb)
 

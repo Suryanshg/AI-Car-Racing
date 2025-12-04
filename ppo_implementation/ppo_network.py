@@ -63,32 +63,6 @@ class PPO_Network(nn.Module):
         self._init_weights()
 
 
-    def forward(self, state) -> Tuple[Tuple[torch.Tensor, torch.Tensor], torch.Tensor]:
-        """
-        TODO:
-
-        Args:
-            state (_type_): _description_
-        """
-
-        # Extract Features using Convolution Layer
-        conv_out = self.conv(state)
-
-        # Predict the value of the state
-        value = self.critic_fc(conv_out)
-
-        # Extract Actor Features
-        actor_features = self.actor_fc(conv_out)
-
-        # Predict the alpha & beta for the policy distribution
-        # Adding 1 to alpha & beta to make distribution "Concave & Unimodal"
-        alpha = self.actor_alpha(actor_features) + 1
-        beta = self.actor_beta(actor_features) + 1
-
-        # Return the value of the state and the alpha and beta that describes the policy distribution
-        return (alpha, beta), value
-    
-
     def _init_weights(self):
         # Orthogonal init for conv layers with ReLU gain
         for m in self.conv:
@@ -114,6 +88,32 @@ class PPO_Network(nn.Module):
         if isinstance(last_critic, nn.Linear):
             nn.init.orthogonal_(last_critic.weight, gain=1.0)
             nn.init.constant_(last_critic.bias, 0.0)
+
+
+    def forward(self, state) -> Tuple[Tuple[torch.Tensor, torch.Tensor], torch.Tensor]:
+        """
+        TODO:
+
+        Args:
+            state (_type_): _description_
+        """
+
+        # Extract Features using Convolution Layer
+        conv_out = self.conv(state)
+
+        # Predict the value of the state
+        value = self.critic_fc(conv_out)
+
+        # Extract Actor Features
+        actor_features = self.actor_fc(conv_out)
+
+        # Predict the alpha & beta for the policy distribution
+        # Adding 1 to alpha & beta to make distribution "Concave & Unimodal"
+        alpha = self.actor_alpha(actor_features) + 1
+        beta = self.actor_beta(actor_features) + 1
+
+        # Return the value of the state and the alpha and beta that describes the policy distribution
+        return (alpha, beta), value
         
 
 # Driver code to only print the architectures
