@@ -9,6 +9,7 @@ from collections import namedtuple
 import random
 from tqdm import tqdm
 from torch.utils.tensorboard import SummaryWriter
+import os
 
 
 # Define the structure of a single transition
@@ -55,6 +56,7 @@ class Agent_PPO():
         # Init Path Args
         self.tensorboard_dir = args.tensorboard_dir
         self.test_model_path = args.test_model_path
+        self.save_model_dir = args.save_model_dir
 
         # Set Random Seeds
         torch.manual_seed(self.seed)
@@ -98,6 +100,9 @@ class Agent_PPO():
         print("Starting PPO Training...")
         print(f"Device: {self.device}")
         print(f"Training for {self.training_iterations} iterations")
+
+        # Create Checkpointing directory, if it already does not exist
+        os.makedirs(self.save_model_dir, exist_ok=True)
         
         # For each training iteration
         for iteration in tqdm(range(self.training_iterations)):
@@ -121,12 +126,12 @@ class Agent_PPO():
             
             # Save model checkpoint
             if (iteration + 1) % self.save_freq == 0:
-                self.save_model(f"checkpoints/ppo_model_iter_{iteration + 1}.pth")
+                self.save_model(f"{self.save_model_dir}/ppo_model_iter_{iteration + 1}.pth")
         
         print("\n" + "="*60)
         print("Training completed!")
         print("="*60)
-        self.save_model("checkpoints/ppo_model_final.pth")
+        self.save_model(f"{self.save_model_dir}/ppo_model_final.pth")
         
 
 
