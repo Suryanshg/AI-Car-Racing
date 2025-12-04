@@ -36,6 +36,7 @@ nvidia-nccl-cu12==2.27.5
 nvidia-nvjitlink-cu12==12.8.93
 nvidia-nvshmem-cu12==3.3.20
 nvidia-nvtx-cu12==12.8.90
+opencv-python==4.11.0.86
 packaging==25.0
 pandas==2.3.3
 pillow==11.3.0
@@ -46,6 +47,7 @@ pyparsing==3.2.5
 python-dateutil==2.9.0.post0
 python-dotenv==1.2.1
 pytz==2025.2
+seaborn==0.13.2
 setuptools==80.9.0
 six==1.17.0
 stable-baselines3==2.7.0

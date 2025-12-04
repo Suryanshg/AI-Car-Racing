@@ -5,7 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "gymnasium[box2d]>=1.2.2",
+    "gymnasium[box2d,other]>=1.2.2",
     "moviepy>=2.2.1",
     "stable-baselines3>=2.7.0",
     "swig>=4.4.0",
