@@ -59,35 +59,35 @@ class PPO_Network(nn.Module):
         )
 
 
-        # Initialize weights
-        self._init_weights()
+        # # Initialize weights
+        # self._init_weights()
 
+    # TODO: This gave super bad results :(
+    # def _init_weights(self):
+    #     # Orthogonal init for conv layers with ReLU gain
+    #     for m in self.conv:
+    #         if isinstance(m, nn.Conv2d):
+    #             nn.init.orthogonal_(m.weight, gain=nn.init.calculate_gain('relu'))
+    #             nn.init.constant_(m.bias, 0.0)
 
-    def _init_weights(self):
-        # Orthogonal init for conv layers with ReLU gain
-        for m in self.conv:
-            if isinstance(m, nn.Conv2d):
-                nn.init.orthogonal_(m.weight, gain=nn.init.calculate_gain('relu'))
-                nn.init.constant_(m.bias, 0.0)
+    #     # Orthogonal init for actor/critic hidden layers
+    #     for m in list(self.actor_fc) + list(self.critic_fc):
+    #         if isinstance(m, nn.Linear):
+    #             nn.init.orthogonal_(m.weight, gain=nn.init.calculate_gain('relu'))
+    #             nn.init.constant_(m.bias, 0.0)
 
-        # Orthogonal init for actor/critic hidden layers
-        for m in list(self.actor_fc) + list(self.critic_fc):
-            if isinstance(m, nn.Linear):
-                nn.init.orthogonal_(m.weight, gain=nn.init.calculate_gain('relu'))
-                nn.init.constant_(m.bias, 0.0)
+    #     # Actor output layers: smaller std helps stabilize policy updates
+    #     for head in [self.actor_alpha, self.actor_beta]:
+    #         for m in head:
+    #             if isinstance(m, nn.Linear):
+    #                 nn.init.orthogonal_(m.weight, gain=0.01)
+    #                 nn.init.constant_(m.bias, 0.0)
 
-        # Actor output layers: smaller std helps stabilize policy updates
-        for head in [self.actor_alpha, self.actor_beta]:
-            for m in head:
-                if isinstance(m, nn.Linear):
-                    nn.init.orthogonal_(m.weight, gain=0.01)
-                    nn.init.constant_(m.bias, 0.0)
-
-        # Critic output: gain=1 for value regression
-        last_critic = self.critic_fc[-1]
-        if isinstance(last_critic, nn.Linear):
-            nn.init.orthogonal_(last_critic.weight, gain=1.0)
-            nn.init.constant_(last_critic.bias, 0.0)
+    #     # Critic output: gain=1 for value regression
+    #     last_critic = self.critic_fc[-1]
+    #     if isinstance(last_critic, nn.Linear):
+    #         nn.init.orthogonal_(last_critic.weight, gain=1.0)
+    #         nn.init.constant_(last_critic.bias, 0.0)
 
 
     def forward(self, state) -> Tuple[Tuple[torch.Tensor, torch.Tensor], torch.Tensor]:

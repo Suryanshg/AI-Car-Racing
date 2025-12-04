@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH -N 1                    
-#SBATCH -n 16                    
+#SBATCH -n 8                    
 #SBATCH --mem=16g                
-#SBATCH -J "PPO-A2C-wt-init"    
+#SBATCH -J "PPO-A2C"    
 
 #SBATCH -p academic
 #SBATCH -A cs551
@@ -15,8 +15,8 @@
 #SBATCH -C A30
 ##SBATCH -C A100
 
-#SBATCH -o logs_wt_init.out 
-#SBATCH -e logs_wt_init.out
+#SBATCH -o logs.out 
+#SBATCH -e logs.out
 
 module load swig/4.3.0
 module load gcc/13.3.0
