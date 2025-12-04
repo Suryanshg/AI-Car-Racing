@@ -52,7 +52,7 @@ class CarRacingV3Wrapper(gym.Wrapper):
         # self.env = ResizeObservation(self.env, resize_shape)
 
         # Stack Frames (96, 96) -> (k, 96, 96)
-        # self.env = FrameStackObservation(self.env, stack_size=args.frame_stack_size)
+        self.env = FrameStackObservation(self.env, stack_size=args.frame_stack_size)
 
         # Call the Parent Class Constructor
         super().__init__(self.env)
