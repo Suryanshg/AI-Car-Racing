@@ -78,6 +78,7 @@ def eval_ppo(agent: Agent_PPO, env, total_episodes = 10, record_video = False):
 
     # Print the statistics
     print(f'Ran evaluation for {total_episodes} episodes')
-    print('Mean Rewards:', np.mean(rewards))
+    print('Rewards Mean:', np.mean(rewards))
+    print('Rewards Standard Deviation:', np.std(rewards))
     print('Rewards List:', rewards)
     print('Running time', time.time() - start_time)
