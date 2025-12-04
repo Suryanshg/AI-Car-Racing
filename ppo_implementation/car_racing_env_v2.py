@@ -51,7 +51,7 @@ class CarRacingV3Wrapper(gym.Wrapper):
         self.env = GrayscaleObservation(self.env, keep_dim=False)
 
         # Resize the img dimensions to resize_shape (96, 96) -> (84, 84)
-        self.env = ResizeObservation(self.env, resize_shape)
+        # self.env = ResizeObservation(self.env, resize_shape)
 
         # Stack Frames (96, 96) -> (k, 96, 96)
         self.env = FrameStackObservation(self.env, stack_size=args.frame_stack_size)
