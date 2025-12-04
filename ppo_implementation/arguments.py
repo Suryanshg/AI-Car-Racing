@@ -30,9 +30,9 @@ def get_args(parser):
     parser.add_argument('--log_freq', type=int, default=1, help='log progress every N iterations')
 
     # Path Based Args
-    parser.add_argument('--tensorboard_dir', type=str, default="runs/ppo-new-framestack", help='Directory path to use for TensorBoard')
+    parser.add_argument('--tensorboard_dir', type=str, default="runs/ppo-action-repeat", help='Directory path to use for TensorBoard')
     parser.add_argument('--test_model_path', type=str, default="checkpoints/ppo_model_final.pth", help='File path to use for loading testing model')
-    parser.add_argument('--save_model_dir', type=str, default="checkpoints/ppo_fs", help='Directory path to use for saving training model weight checkpoints')
+    parser.add_argument('--save_model_dir', type=str, default="checkpoints/ppo_action_repeat", help='Directory path to use for saving training model weight checkpoints')
 
 
 

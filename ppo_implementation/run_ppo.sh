@@ -2,7 +2,7 @@
 #SBATCH -N 1                    
 #SBATCH -n 16                    
 #SBATCH --mem=16g                
-#SBATCH -J "PPO-A2C"    
+#SBATCH -J "PPO-A2C-action-repeat"    
 
 #SBATCH -p academic
 #SBATCH -A cs551
@@ -15,8 +15,8 @@
 #SBATCH -C A30
 ##SBATCH -C A100
 
-#SBATCH -o ppo_logs.out 
-#SBATCH -e ppo_logs.out
+#SBATCH -o logs_action_repeat.out 
+#SBATCH -e logs_action_repeat.out
 
 module load swig/4.3.0
 module load gcc/13.3.0
