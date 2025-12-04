@@ -40,7 +40,6 @@ class Agent_PPO():
         self.value_loss_coef = args.value_loss_coef
         self.entropy_coef = args.entropy_coef
         self.training_iterations = args.training_iterations
-        self.buffer_capacity = args.buffer_capacity
         self.num_episodes_to_collect = args.num_episodes_to_collect
         self.max_episode_steps = args.max_episode_steps
 
@@ -52,6 +51,10 @@ class Agent_PPO():
         self.seed = args.seed
         self.save_freq = args.save_freq
         self.log_freq = args.log_freq
+
+        # Init Path Args
+        self.tensorboard_dir = args.tensorboard_dir
+        self.test_model_path = args.test_model_path
 
         # Set Random Seeds
         torch.manual_seed(self.seed)
@@ -72,13 +75,12 @@ class Agent_PPO():
         self.episode_rewards = deque(maxlen=self.num_episodes_to_collect)
 
         # Init SummaryWriter for TensorBoard
-        self.tb_writer = SummaryWriter(log_dir="runs/ppo")
+        self.tb_writer = SummaryWriter(log_dir=self.tensorboard_dir)
 
         # If we init AgentPPO in test (inference) mode
-        # TODO: parameterize the path of the model here
         if args.test_ppo:
             print('loading trained model: ')
-            self.load_model('checkpoints/ppo_model_final_config3.pth')
+            self.load_model(self.test_model_path)
             self.ppo_network.eval()
             print('Loaded trained PPO Network successfully!')
 
@@ -241,10 +243,6 @@ class Agent_PPO():
 
                 # Move to the next state
                 state = next_state
-
-                # # Stop if buffer is full
-                # if len(self.buffer) >= self.buffer_capacity:
-                #     break
                 
                 # Stop collecting data if episode is done or truncated
                 if done or truncated:
@@ -351,7 +349,6 @@ class Agent_PPO():
         advantages_tensor = torch.FloatTensor(advantages).to(self.device)
 
         # Get Dataset (Buffer) Length
-        # TODO: Later replace this line with buffer capacity
         dataset_size = len(states_np)
 
         # Update policy for multiple epochs

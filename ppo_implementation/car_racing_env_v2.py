@@ -42,9 +42,7 @@ class CarRacingV3Wrapper(gym.Wrapper):
                             render_mode = render_mode, 
                             lap_complete_percent = lap_complete_percent, 
                             continuous = continuous,
-
-                            # TODO: check if this works
-                            max_episode_steps = args.max_episode_steps + 100
+                            max_episode_steps = args.max_episode_steps * args.action_repetition + 100
                             )
 
         # Convert to Grayscale (96, 96, 3) -> (96, 96)
@@ -54,7 +52,7 @@ class CarRacingV3Wrapper(gym.Wrapper):
         # self.env = ResizeObservation(self.env, resize_shape)
 
         # Stack Frames (96, 96) -> (k, 96, 96)
-        self.env = FrameStackObservation(self.env, stack_size=args.frame_stack_size)
+        # self.env = FrameStackObservation(self.env, stack_size=args.frame_stack_size)
 
         # Call the Parent Class Constructor
         super().__init__(self.env)

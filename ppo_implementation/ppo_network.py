@@ -30,12 +30,12 @@ class PPO_Network(nn.Module):
         )
 
         # TODO: Instead of hard coding, use a method to dynamically compute this
-        # conv_out_size = 64 * 8 * 8
+        conv_out_size = 64 * 8 * 8
 
         # FC Layer for the Actor Head
         self.actor_fc = nn.Sequential(
-            # nn.Linear(conv_out_size, 256),
-            nn.LazyLinear(256),
+            nn.Linear(conv_out_size, 256),
+            # nn.LazyLinear(256),
             nn.ReLU()
         )
 
@@ -52,8 +52,8 @@ class PPO_Network(nn.Module):
 
         # FC Layer for Critic Head
         self.critic_fc = nn.Sequential(
-            # nn.Linear(conv_out_size, 256),
-            nn.LazyLinear(256),
+            nn.Linear(conv_out_size, 256),
+            # nn.LazyLinear(256),
             nn.ReLU(),
             nn.Linear(256, 1)
         )

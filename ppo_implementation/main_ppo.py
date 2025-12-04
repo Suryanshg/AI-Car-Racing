@@ -5,6 +5,7 @@ from arguments import get_args
 from car_racing_env_v2 import CarRacingV3Wrapper
 from agent_ppo import Agent_PPO
 from eval_ppo import eval_ppo
+from gymnasium.wrappers import FrameStackObservation
 
 def parse():
     """
@@ -41,6 +42,9 @@ def run(args):
         # Intialize the Environment
         env = CarRacingV3Wrapper(args=args)
 
+        # Stack Frames (96, 96) -> (4, 96, 96)
+        env = FrameStackObservation(env, stack_size=args.frame_stack_size)
+
         # Initialize the PPO Agent
         agent = Agent_PPO(env, args)
 
@@ -59,6 +63,9 @@ def run(args):
         
         # Initialize Environment using the determined render_mode_value
         env = CarRacingV3Wrapper(render_mode=render_mode_value, args=args)
+
+        # Stack Frames (96, 96) -> (4, 96, 96)
+        env = FrameStackObservation(env, stack_size=args.frame_stack_size)
 
         # Initialize the PPO Agent
         agent = Agent_PPO(env, args)

@@ -3,7 +3,7 @@ def get_args(parser):
     TODO:
     '''
     # Deep Learning Hyperparameters (TODO: Double check if all are used here)
-    parser.add_argument('--lr', type=float, default=1e-5, help='learning rate') # TODO: Might wanna try 2.5e-4
+    parser.add_argument('--lr', type=float, default=1e-4, help='learning rate')
     parser.add_argument('--batch_size', type=int, default=128, help='batch size') # TODO: Can try 64
 
     # PPO Hyperparameters (TODO: Double check if all are used here)
@@ -15,7 +15,6 @@ def get_args(parser):
     parser.add_argument('--entropy_coef', type=float, default=0.01, help='entropy coefficient')
     parser.add_argument('--max_grad_norm', type=float, default=0.5, help='max gradient norm')
     parser.add_argument('--training_iterations', type=int, default=100, help='number of training iterations')
-    parser.add_argument('--buffer_capacity', type=int, default=3000, help='replay buffer capacity')
     parser.add_argument('--num_episodes_to_collect', type=int, default=5, help='number of episodes per iteration')
     parser.add_argument('--max_episode_steps', type=int, default=1000, help='max steps per episode')
 
@@ -29,6 +28,12 @@ def get_args(parser):
     parser.add_argument('--seed', type=int, default=0, help='seed value for randomizing')
     parser.add_argument('--save_freq', type=int, default=10, help='save model every N iterations')
     parser.add_argument('--log_freq', type=int, default=1, help='log progress every N iterations')
+
+    # Path Based Args
+    parser.add_argument('--tensorboard_dir', type=str, default="runs/ppo-new-framestack", help='Directory path to use for TensorBoard')
+    parser.add_argument('--test_model_path', type=str, default="checkpoints/ppo_model_final.pth", help='File path to use for loading testing model')
+
+
 
     # Return the parser with added arguments
     return parser
