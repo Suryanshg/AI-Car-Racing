@@ -21,7 +21,7 @@ def get_args(parser):
     # TODO: Add a param for Target_KL here (if needed)
 
     # Environment Wrapper Specific Args
-    parser.add_argument('--action_repetition', type=int, default=1, help='number of times to repeat the action')
+    parser.add_argument('--action_repetition', type=int, default=4, help='number of times to repeat the action')
     parser.add_argument('--frame_stack_size', type=int, default=4, help='number of images to stack in a frame')
 
     # Misc Args
