@@ -12,6 +12,13 @@ from gymnasium.wrappers import (
 # Standard NO OP Action for the car
 NO_OP_ACTION = np.array([0.0, 0.0, 0.0])
 
+# Constants for the Car's position in the 96x96 observation
+# The camera is locked to the car, so these never change.
+# We look slightly below the center to check the pixels under the tires.
+CAR_H_START = 67
+CAR_H_END = 77
+CAR_W_START = 45
+CAR_W_END = 51
 
 class CarRacingV3Wrapper(gym.Wrapper):
     def __init__(self,
@@ -46,7 +53,7 @@ class CarRacingV3Wrapper(gym.Wrapper):
                             )
 
         # Convert to Grayscale (96, 96, 3) -> (96, 96)
-        self.env = GrayscaleObservation(self.env, keep_dim=False)
+        # self.env = GrayscaleObservation(self.env, keep_dim=False)
 
         # Resize the img dimensions to resize_shape (96, 96) -> (84, 84)
         # self.env = ResizeObservation(self.env, resize_shape)
@@ -56,6 +63,14 @@ class CarRacingV3Wrapper(gym.Wrapper):
 
         # Call the Parent Class Constructor
         super().__init__(self.env)
+
+        # Manually Override the observation space to tell that a grayscale img will be returned (with 1 channel only)
+        self.observation_space = gym.spaces.Box(
+            low=0, 
+            high=255, 
+            shape=(96, 96), 
+            dtype=np.uint8
+        )
 
         # Store the arguments from command line
         self.action_repetition = args.action_repetition
@@ -75,15 +90,20 @@ class CarRacingV3Wrapper(gym.Wrapper):
         # TODO: [If Needed] Implement a way to capture reward memory and initialize it here 
 
         # Reset the env to get the starting state
-        state, info = self.env.reset(seed=seed, options = options) # state shape: (96, 96, 3)
+        state_rgb, info = self.env.reset(seed=seed, options = options) # state shape: (96, 96, 3)
 
         # Skip first 50 frames, as it involves zooming in by the env, 
         # which might confuse the Neural Network in order to learn
         # the right action for a given state
         for _ in range(50):
-            state, _, _, _, info = self.env.step(NO_OP_ACTION)
+            state_rgb, _, _, _, info = self.env.step(NO_OP_ACTION)
 
-        return state, info
+        # Convert RGB (96, 96, 3) to Grayscale (96, 96)
+        # Luminance formula: 0.299 R + 0.587 G + 0.114 B
+        state_gray = np.dot(state_rgb[..., :3], [0.299, 0.587, 0.114])
+        state_gray = state_gray.astype(np.uint8)
+
+        return state_gray, info
     
 
     def step(self, action: np.ndarray) -> Tuple[np.ndarray, float, bool, bool]:
@@ -111,11 +131,13 @@ class CarRacingV3Wrapper(gym.Wrapper):
 
         # Repeat action for the self.action_repetition times
         for _ in range(self.action_repetition):
-            next_state, reward, done, truncated, info = self.env.step(action)
+            next_state_rgb, reward, done, truncated, info = self.env.step(action)
 
             # TODO: Implement Reward Shaping here
             # Examples: Green Penalty, Die Penalty Removal etc.
-            # self._compute_green_penalty(next_state_rgb)
+
+            # Compute and subtract green penalty from the reward
+            reward = reward - self._compute_green_penalty(next_state_rgb)
 
             # Accumulate total reward for this action
             total_reward += reward
@@ -124,7 +146,48 @@ class CarRacingV3Wrapper(gym.Wrapper):
             if done or truncated:
                 break
 
-        return next_state, total_reward, done, truncated, info
+        # Convert RGB (96, 96, 3) to Grayscale (96, 96)
+        # Luminance formula: 0.299 R + 0.587 G + 0.114 B
+        next_state_gray = np.dot(next_state_rgb[..., :3], [0.299, 0.587, 0.114])
+        next_state_gray = next_state_gray.astype(np.uint8)
+
+        return next_state_gray, total_reward, done, truncated, info
+
+
+    def _compute_green_penalty(self, img: np.ndarray) -> float:
+        """
+        TODO:
+
+        Args:
+            mg (np.ndarray): _description_
+
+        Returns:
+            float: _description_
+        """
+
+        # Crop the area under the car tires
+        patch = img[CAR_H_START:CAR_H_END, CAR_W_START:CAR_W_END]
+
+        # save_state_img(patch, "Patch", "patch.png")
+        
+        # Compute the average color of that patch
+        # Axis (0, 1) averages the height and width, leaving the 3 RGB channels
+        mean_color = patch.mean(axis=(0, 1))
+        
+        r = mean_color[0]
+        g = mean_color[1]
+        b = mean_color[2]
+        
+        # print(f"\nr: {r:.4f}, g: {g:.4f}, b: {b:.4f}")
+
+        # Detect Green Dominance
+        if g > 60:
+            # The car is on the grass!
+            # print("Car on grass!")
+            return 0.1  # Return the penalty amount
+        
+        # The car is on the road (or red/white curb)
+        return 0.0
 
 
     def render(self):
@@ -142,31 +205,27 @@ class CarRacingV3Wrapper(gym.Wrapper):
         self.env.close()
 
 
-    def _compute_green_penalty(self, img: np.ndarray) -> float:
-        """
-        TODO:
+def save_state_img(state: np.ndarray, img_title: str, img_file_name: str, cmap = None):
+    """
+    TODO:
+    """
+    # Case 1: RGB Image (Height, Width, 3)
+    # We want to show the whole thing, not slice it.
+    if len(state.shape) == 3 and state.shape[-1] == 3:
+        img_to_show = state
+        # RGB images don't use a colormap (like 'gray')
+        cmap = None 
 
-        Args:
-            mg (np.ndarray): _description_
+    # Case 2: Frame Stack (Stack_Size, Height, Width)
+    # We want to show the most recent frame (the last one).
+    elif len(state.shape) == 3:
+        img_to_show = state[-1]
+        
+    # Case 3: Grayscale Image (Height, Width)
+    else:
+        img_to_show = state
 
-        Returns:
-            float: _description_
-        """
-
-        #TODO: Compute penalty using wheel coordinates
-        return 0.0
-    
-
-    def save_state_img(self, state: np.ndarray, img_title: str, img_file_name: str, cmap = None):
-        """
-        TODO:
-        """
-        if len(state.shape) == 3:
-            img_to_show = state[-1]
-        else:
-            img_to_show = state
-
-        plt.imshow(img_to_show, cmap = cmap)
-        plt.title(img_title)
-        plt.savefig(img_file_name)
-        plt.close()  
+    plt.imshow(img_to_show, cmap=cmap)
+    plt.title(img_title)
+    plt.savefig(img_file_name)
+    plt.close()
