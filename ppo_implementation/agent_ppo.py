@@ -483,11 +483,10 @@ class Agent_PPO():
         total_reward = 0.0
 
         # Do Full Gas Action for 10 times
-        for i in range(90):
+        for i in range(100):
             next_state, reward, done, truncated, _ = self.env.step(np.array([0.0, 1.0, 0.0]))
             total_reward += reward
-            print(f"Step {i+1} - Reward: {reward}, Total Reward: {total_reward}")
-
+            print(f"Step {i+1} - Reward: {reward:.4f}, Total Reward: {total_reward:.4f}")
         save_state_img(next_state[-1], 
                         "Image after accelerating for 10 times", 
                         "img_accelerate_10.png", 

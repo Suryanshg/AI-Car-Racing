@@ -8,6 +8,7 @@ from gymnasium.wrappers import (
     GrayscaleObservation, 
     ResizeObservation
 )
+import time
 
 # Standard NO OP Action for the car
 NO_OP_ACTION = np.array([0.0, 0.0, 0.0])
@@ -166,9 +167,10 @@ class CarRacingV3Wrapper(gym.Wrapper):
         """
 
         # Crop the area under the car tires
-        patch = img[CAR_H_START:CAR_H_END, CAR_W_START:CAR_W_END]
+        # patch = img[CAR_H_START:CAR_H_END, CAR_W_START:CAR_W_END]
+        patch = img[62:80, 40:56]
 
-        # save_state_img(patch, "Patch", "patch.png")
+        save_state_img(patch, "Patch", "patch.png")
         
         # Compute the average color of that patch
         # Axis (0, 1) averages the height and width, leaving the 3 RGB channels
@@ -180,11 +182,15 @@ class CarRacingV3Wrapper(gym.Wrapper):
         
         # print(f"\nr: {r:.4f}, g: {g:.4f}, b: {b:.4f}")
 
-        # Detect Green Dominance
-        if g > 60:
+        # Detect Green Dominance over Red
+        if g > r + 15:
+
             # The car is on the grass!
             # print("Car on grass!")
-            return 0.1  # Return the penalty amount
+            # time.sleep(5)
+
+
+            return 1.0  # Return the penalty amount
         
         # The car is on the road (or red/white curb)
         return 0.0
