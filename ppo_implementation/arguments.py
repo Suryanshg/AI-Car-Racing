@@ -9,7 +9,7 @@ def get_args(parser):
     # PPO Hyperparameters (TODO: Double check if all are used here)
     parser.add_argument('--gamma', type=float, default=0.99, help='discount factor')
     parser.add_argument('--gae_lambda', type=float, default=0.95, help='GAE lambda parameter')
-    parser.add_argument('--ppo_epochs', type=int, default=5, help='number of PPO epochs') # TODO: Can decrease to 5
+    parser.add_argument('--ppo_epochs', type=int, default=20, help='number of PPO epochs')
     parser.add_argument('--clip_epsilon', type=float, default=0.1, help='PPO clip epsilon') # TODO: Might wanna try 0.1
     parser.add_argument('--value_loss_coef', type=float, default=0.5, help='value loss coefficient')
     parser.add_argument('--entropy_coef', type=float, default=0.01, help='entropy coefficient')
@@ -30,9 +30,9 @@ def get_args(parser):
     parser.add_argument('--log_freq', type=int, default=1, help='log progress every N iterations')
 
     # Path Based Args
-    parser.add_argument('--tensorboard_dir', type=str, default="runs/ppo-5-epochs", help='Directory path to use for TensorBoard')
+    parser.add_argument('--tensorboard_dir', type=str, default="runs/ppo-20-epochs", help='Directory path to use for TensorBoard')
     parser.add_argument('--test_model_path', type=str, default="checkpoints/ppo_model_final.pth", help='File path to use for loading testing model')
-    parser.add_argument('--save_model_dir', type=str, default="checkpoints/ppo_5_epochs", help='Directory path to use for saving training model weight checkpoints')
+    parser.add_argument('--save_model_dir', type=str, default="checkpoints/ppo_20_epochs", help='Directory path to use for saving training model weight checkpoints')
 
 
 
