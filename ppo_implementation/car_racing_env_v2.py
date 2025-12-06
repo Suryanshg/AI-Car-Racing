@@ -170,7 +170,7 @@ class CarRacingV3Wrapper(gym.Wrapper):
         # patch = img[CAR_H_START:CAR_H_END, CAR_W_START:CAR_W_END]
         patch = img[62:80, 40:56]
 
-        save_state_img(patch, "Patch", "patch.png")
+        # save_state_img(patch, "Patch", "patch.png")
         
         # Compute the average color of that patch
         # Axis (0, 1) averages the height and width, leaving the 3 RGB channels
