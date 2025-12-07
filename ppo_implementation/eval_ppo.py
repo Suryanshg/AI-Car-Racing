@@ -20,9 +20,6 @@ def eval_ppo(agent: Agent_PPO, env, total_episodes = 10, record_video = False):
     # Initialize a list to keep track of rewards gained per episode
     rewards = []
 
-    # TODO: Implement this
-    # env.seed(seed)
-
     # If recording of the video was requested
     if record_video:
        

@@ -10,6 +10,7 @@ import random
 from tqdm import tqdm
 from torch.utils.tensorboard import SummaryWriter
 import os
+import matplotlib.pyplot as plt
 
 
 # Define the structure of a single transition
@@ -469,15 +470,14 @@ class Agent_PPO():
         print(f"Model loaded from {filename}")
 
 
-
     def test_drive(self):
         """
         TODO:
         """
 
         # Reset the env and get the first state
-        state, _ = self.env.reset()
-        self.env.save_state_img(
+        state, _ = self.env.reset(seed = 77)
+        save_state_img(
             state,
             "Image after resetting env",
             "img_reset.png",
@@ -487,12 +487,26 @@ class Agent_PPO():
         total_reward = 0.0
 
         # Do Full Gas Action for 10 times
-        for i in range(11):
-            next_state, reward, done, truncated, _ = self.env.step(np.array([0.0, 2.0, 0.0]))
+        for i in range(100):
+            next_state, reward, done, truncated, _ = self.env.step(np.array([0.0, 1.0, 0.0]))
             total_reward += reward
-            print(f"Step {i+1} - Reward: {reward}, Total Reward: {total_reward}")
+            print(f"Step {i+1} - Reward: {reward:.4f}, Total Reward: {total_reward:.4f}")
+        save_state_img(next_state[-1], 
+                        "Image after accelerating for 10 times", 
+                        "img_accelerate_10.png", 
+                        cmap = "gray")
+        
 
-        self.env.save_state_img(next_state[-1], 
-                                "Image after accelerating for 10 times", 
-                                "img_accelerate_10.png", 
-                                cmap = "gray")
+def save_state_img(state: np.ndarray, img_title: str, img_file_name: str, cmap = None):
+    """
+    TODO:
+    """
+    if len(state.shape) == 3:
+        img_to_show = state[-1]
+    else:
+        img_to_show = state
+
+    plt.imshow(img_to_show, cmap = cmap)
+    plt.title(img_title)
+    plt.savefig(img_file_name)
+    plt.close()  
