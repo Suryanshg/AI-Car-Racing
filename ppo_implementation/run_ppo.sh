@@ -8,16 +8,13 @@
 #SBATCH -t 48:00:00
 #SBATCH --gres=gpu:1
 #SBATCH -C A30
-#SBATCH -o logs/logs.out
-#SBATCH -e logs/logs.out
+#SBATCH -o logs.out
+#SBATCH -e logs.out
 
 module load swig/4.3.0
 module load gcc/13.3.0
 module load python/3.11.6
 module load cuda/12.9.0
-
-# Ensure logs folder exists
-mkdir -p logs
 
 # -----------------------------
 # Create and activate venv
