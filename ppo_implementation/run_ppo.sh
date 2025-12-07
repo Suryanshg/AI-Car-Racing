@@ -11,36 +11,31 @@
 #SBATCH -o logs/logs.out
 #SBATCH -e logs/logs.out
 
-# -----------------------------
-# Load modules
-# -----------------------------
-module load python/3.12.10   # Use Python version compatible with uv
-module load cuda
+module load swig/4.3.0
+module load gcc/13.3.0
+module load python/3.11.6
+module load cuda/12.9.0
 
-# -----------------------------
-# Create logs folder
-# -----------------------------
+# Ensure logs folder exists
 mkdir -p logs
 
 # -----------------------------
-# Create or activate uv venv
+# Create and activate venv
 # -----------------------------
 VENV_DIR=".venv"
 
 if [ ! -d "$VENV_DIR" ]; then
-    echo "Creating uv virtual environment..."
-    uv venv "$VENV_DIR"
+    echo "Creating virtual environment..."
+    python -m venv "$VENV_DIR"
+    source "$VENV_DIR/bin/activate"
+    pip install --upgrade pip
+    pip install -r requirements.txt
+else
+    echo "Activating existing virtual environment..."
+    source "$VENV_DIR/bin/activate"
 fi
-
-source "$VENV_DIR/bin/activate"
-
-# -----------------------------
-# Install/update dependencies
-# -----------------------------
-echo "Syncing dependencies with uv..."
-uv sync
 
 # -----------------------------
 # Run PPO training
 # -----------------------------
-uv run python main_ppo.py --train_ppo
+python -u main_ppo.py --train_ppo
