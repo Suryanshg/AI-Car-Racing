@@ -1,4 +1,4 @@
-# wrappers.py
+
 from collections import deque
 import numpy as np
 import gymnasium as gym
@@ -72,19 +72,14 @@ def make_env(render_mode=None):
     # 1) Discrete actions
     env = DiscreteActionWrapper(env)
 
-    # 2) Grayscale (team uses Gym’s luminance-based grayscale)
     env = GrayscaleObservation(env, keep_dim=False)
 
-    # 3) Resize BEFORE skipping frames
     env = ResizeObservation(env, (84, 84))
 
-    # 4) FrameStackObservation (team uses channel-last stacking)
     env = FrameStackObservation(env, stack_size=4)
 
-    # 5) Skip first 50 frames AFTER preprocessing (team behavior)
     env = IgnoreFirstNFrames(env, n=50)
 
-    # 6) Normalize (your team: optional — but safe)
     env = TransformObservation(
         env,
         lambda obs: obs.astype(np.float32) / 255.0
