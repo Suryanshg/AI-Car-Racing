@@ -12,37 +12,35 @@
 #SBATCH -e logs/logs.out
 
 # -----------------------------
-# Environment Setup
+# Load modules
 # -----------------------------
-module load swig/4.3.0
-module load gcc/13.3.0
-module load python/3.11.6
+module load python/3.12.10   # Use Python version compatible with uv
 module load cuda
 
-# Ensure GCC libraries are in path
-GCC_LIB_PATH=$(dirname $(dirname $(which g++)))/lib64
-export LD_LIBRARY_PATH=$GCC_LIB_PATH:$LD_LIBRARY_PATH
-
+# -----------------------------
 # Create logs folder
+# -----------------------------
 mkdir -p logs
 
 # -----------------------------
-# Create or activate venv
+# Create or activate uv venv
 # -----------------------------
 VENV_DIR=".venv"
 
 if [ ! -d "$VENV_DIR" ]; then
-    echo "Creating virtual environment..."
-    python -m venv "$VENV_DIR"
-    source "$VENV_DIR/bin/activate"
-    pip install --upgrade pip
-    pip install -r requirements.txt
-else
-    echo "Activating existing virtual environment..."
-    source "$VENV_DIR/bin/activate"
+    echo "Creating uv virtual environment..."
+    uv venv "$VENV_DIR"
 fi
+
+source "$VENV_DIR/bin/activate"
+
+# -----------------------------
+# Install/update dependencies
+# -----------------------------
+echo "Syncing dependencies with uv..."
+uv sync
 
 # -----------------------------
 # Run PPO training
 # -----------------------------
-python -u main_ppo.py --train_ppo
+uv run python main_ppo.py --train_ppo
