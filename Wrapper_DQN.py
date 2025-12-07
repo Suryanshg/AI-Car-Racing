@@ -69,7 +69,6 @@ def make_env(render_mode=None):
 
     env = CarRacingV3Wrapper(render_mode=render_mode)
 
-    # 1) Discrete actions
     env = DiscreteActionWrapper(env)
 
     env = GrayscaleObservation(env, keep_dim=False)
