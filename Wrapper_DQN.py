@@ -56,7 +56,6 @@ class IgnoreFirstNFrames(gym.Wrapper):
     def reset(self, **kwargs):
         obs, info = self.env.reset(**kwargs)
 
-        # After grayscale+resize+stack (to match team)
         for _ in range(self.n):
             obs, _, terminated, truncated, info = self.env.step(0)
             if terminated or truncated:
