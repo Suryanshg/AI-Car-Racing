@@ -103,7 +103,8 @@ class Agent_PPO():
 
         # Create Checkpointing directory, if it already does not exist
         os.makedirs(self.save_model_dir, exist_ok=True)
-        
+        best_reward = 0
+
         # For each training iteration
         for iteration in tqdm(range(self.training_iterations)):
             print(f"\n{'='*60}")
@@ -118,11 +119,14 @@ class Agent_PPO():
             print("Updating policy...")
             self.update_policy()
             
-            # Log progress
+            # Log progress & Save best model
             if (iteration + 1) % self.log_freq == 0:
                 avg_reward = np.mean(self.episode_rewards)
                 self.tb_writer.add_scalar('train/avg_reward', avg_reward, iteration + 1)
                 print(f"\nAverage Reward (last 100 episodes): {avg_reward:.2f}")
+                if avg_reward > best_reward:
+                    best_reward = avg_reward
+                    self.save_model(f"{self.save_model_dir}/ppo_model_best.pth")
             
             # Save model checkpoint
             if (iteration + 1) % self.save_freq == 0:
