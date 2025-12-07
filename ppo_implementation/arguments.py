@@ -14,8 +14,8 @@ def get_args(parser):
     parser.add_argument('--value_loss_coef', type=float, default=0.5, help='value loss coefficient')
     parser.add_argument('--entropy_coef', type=float, default=0.01, help='entropy coefficient')
     parser.add_argument('--max_grad_norm', type=float, default=0.5, help='max gradient norm')
-    parser.add_argument('--training_iterations', type=int, default=100, help='number of training iterations')
-    parser.add_argument('--num_episodes_to_collect', type=int, default=5, help='number of episodes per iteration')
+    parser.add_argument('--training_iterations', type=int, default=200, help='number of training iterations')
+    parser.add_argument('--num_episodes_to_collect', type=int, default=10, help='number of episodes per iteration')
     parser.add_argument('--max_episode_steps', type=int, default=1000, help='max steps per episode')
 
     # TODO: Add a param for Target_KL here (if needed)
@@ -30,9 +30,9 @@ def get_args(parser):
     parser.add_argument('--log_freq', type=int, default=1, help='log progress every N iterations')
 
     # Path Based Args
-    parser.add_argument('--tensorboard_dir', type=str, default="runs/ppo-green-penalty", help='Directory path to use for TensorBoard')
+    parser.add_argument('--tensorboard_dir', type=str, default="runs/ppo-green-penalty-0.2", help='Directory path to use for TensorBoard')
     parser.add_argument('--test_model_path', type=str, default="checkpoints/ppo_model_final.pth", help='File path to use for loading testing model')
-    parser.add_argument('--save_model_dir', type=str, default="checkpoints/ppo_green_penalty", help='Directory path to use for saving training model weight checkpoints')
+    parser.add_argument('--save_model_dir', type=str, default="checkpoints/ppo_green_penalty-0.2", help='Directory path to use for saving training model weight checkpoints')
 
 
 

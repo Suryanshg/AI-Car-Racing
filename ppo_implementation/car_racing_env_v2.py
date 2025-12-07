@@ -190,7 +190,7 @@ class CarRacingV3Wrapper(gym.Wrapper):
             # time.sleep(5)
 
 
-            return 1.0  # Return the penalty amount
+            return 0.2  # Return the penalty amount
         
         # The car is on the road (or red/white curb)
         return 0.0
