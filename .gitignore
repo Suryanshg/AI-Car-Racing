@@ -1,7 +1,7 @@
 # Ignore .venv
 .venv
 
-# Ignore all zio files
+# Ignore all zip files
 *.zip
 
 # Ignore all stuff in "data" folder except for the .gitkeep
@@ -10,6 +10,10 @@ data/*
 
 # Ignore pycache
 __pycache__/
+.idea/
 
 # Ignore all .pth files
 *.pth
+
+# Ignore log files
+ppo_implementation/runs/
