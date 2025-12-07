@@ -1,11 +1,11 @@
-# train_dqn.py
+
 from stable_baselines3 import DQN
 from environment_framestacking import CarRacingV3Wrapper
 from gpu_cleanup_callback import GPUCleanupCallback
 import torch
 
 env = CarRacingV3Wrapper(
-    continuous=False,   # <-- ONLY CHANGE NEEDED FOR YOU
+    continuous=False,
     framestack=4,
     resize_shape=(84, 84),
     action_repetition=1,
