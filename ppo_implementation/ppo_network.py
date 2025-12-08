@@ -2,6 +2,33 @@ import torch
 import torch.nn as nn
 from typing import Tuple
 
+class SpatialAttention(nn.Module):
+    def __init__(self, kernel_size=7):
+        super().__init__()
+        self.conv = nn.Conv2d(2, 1, kernel_size=kernel_size, padding=kernel_size//2)
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, x):
+        # Channel-wise pooling to get spatial map
+        avg_out = torch.mean(x, dim=1, keepdim=True)
+        max_out, _ = torch.max(x, dim=1, keepdim=True)
+        spatial = torch.cat([avg_out, max_out], dim=1)  # [B, 2, H, W]
+        attention = self.sigmoid(self.conv(spatial))
+        return x * attention
+
+class ConvBlock(nn.Module):
+    def __init__(self, in_channels, out_channels, kernel_size, stride):
+        super().__init__()
+        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size, stride)
+        self.relu = nn.ReLU(inplace=True)
+
+    def forward(self, x):
+        out = self.conv(x)
+        out = self.relu(out)
+        return out
+
+
+
 # TODO: Look into implementing returning Normal Distribution mean and log_std instead of Beta Dist
 class PPO_Network(nn.Module):
 
@@ -16,26 +43,24 @@ class PPO_Network(nn.Module):
         super(PPO_Network, self).__init__()
 
         # Shared Convolutional Feature Extractor
-        self.conv = nn.Sequential(
-            nn.Conv2d(state_dim[0], 32, kernel_size = 8, stride = 4),       # (N, 32, H//4, W//2)
-            nn.ReLU(),
-            
-            nn.Conv2d(32, 64, kernel_size = 4, stride = 2),                 # (N, 64, 10, 10)
-            nn.ReLU(),
+        self.feature_extractor = nn.Sequential(
+            ConvBlock(state_dim[0], 32, kernel_size=8, stride=4),
+            SpatialAttention(kernel_size=3),
 
-            nn.Conv2d(64, 64, kernel_size = 3, stride = 1),                 # (N, 64, 8, 8)
-            nn.ReLU(),
+            ConvBlock(32, 64, kernel_size=4, stride=2),
+            SpatialAttention(kernel_size=5),
 
-            nn.Flatten()                                                    # (N, 64 * 8 * 8)
+            ConvBlock(64, 64, kernel_size=3, stride=1),
+            SpatialAttention(kernel_size=7),
+
+            nn.Flatten()
         )
 
-        # TODO: Instead of hard coding, use a method to dynamically compute this
         conv_out_size = 64 * 8 * 8
 
         # FC Layer for the Actor Head
         self.actor_fc = nn.Sequential(
             nn.Linear(conv_out_size, 256),
-            # nn.LazyLinear(256),
             nn.ReLU()
         )
 
@@ -53,41 +78,9 @@ class PPO_Network(nn.Module):
         # FC Layer for Critic Head
         self.critic_fc = nn.Sequential(
             nn.Linear(conv_out_size, 256),
-            # nn.LazyLinear(256),
             nn.ReLU(),
             nn.Linear(256, 1)
         )
-
-
-        # # Initialize weights
-        # self._init_weights()
-
-    # TODO: This gave super bad results :(
-    # def _init_weights(self):
-    #     # Orthogonal init for conv layers with ReLU gain
-    #     for m in self.conv:
-    #         if isinstance(m, nn.Conv2d):
-    #             nn.init.orthogonal_(m.weight, gain=nn.init.calculate_gain('relu'))
-    #             nn.init.constant_(m.bias, 0.0)
-
-    #     # Orthogonal init for actor/critic hidden layers
-    #     for m in list(self.actor_fc) + list(self.critic_fc):
-    #         if isinstance(m, nn.Linear):
-    #             nn.init.orthogonal_(m.weight, gain=nn.init.calculate_gain('relu'))
-    #             nn.init.constant_(m.bias, 0.0)
-
-    #     # Actor output layers: smaller std helps stabilize policy updates
-    #     for head in [self.actor_alpha, self.actor_beta]:
-    #         for m in head:
-    #             if isinstance(m, nn.Linear):
-    #                 nn.init.orthogonal_(m.weight, gain=0.01)
-    #                 nn.init.constant_(m.bias, 0.0)
-
-    #     # Critic output: gain=1 for value regression
-    #     last_critic = self.critic_fc[-1]
-    #     if isinstance(last_critic, nn.Linear):
-    #         nn.init.orthogonal_(last_critic.weight, gain=1.0)
-    #         nn.init.constant_(last_critic.bias, 0.0)
 
 
     def forward(self, state) -> Tuple[Tuple[torch.Tensor, torch.Tensor], torch.Tensor]:
@@ -99,7 +92,7 @@ class PPO_Network(nn.Module):
         """
 
         # Extract Features using Convolution Layer
-        conv_out = self.conv(state)
+        conv_out = self.feature_extractor(state)
 
         # Predict the value of the state
         value = self.critic_fc(conv_out)
