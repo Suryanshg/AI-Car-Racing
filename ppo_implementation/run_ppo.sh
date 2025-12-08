@@ -16,6 +16,9 @@ module load gcc/13.3.0
 module load python/3.11.6
 module load cuda/12.9.0
 
+GCC_LIB_PATH=$(dirname $(dirname $(which g++)))/lib64
+export LD_LIBRARY_PATH=$GCC_LIB_PATH:$LD_LIBRARY_PATH
+
 # -----------------------------
 # Create and activate venv
 # -----------------------------
