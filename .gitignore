@@ -8,6 +8,10 @@ bc-logs/
 # Ignore all zip files
 *.zip
 
+
+# Ignore videos
+*.mp4
+
 # Ignore all stuff in "data" folder except for the .gitkeep
 data/*
 !data/.gitkeep

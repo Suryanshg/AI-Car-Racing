@@ -1,3 +1,5 @@
+from collections import deque
+
 import gymnasium as gym
 import numpy as np
 import matplotlib.pyplot as plt
@@ -75,6 +77,7 @@ class CarRacingV3Wrapper(gym.Wrapper):
 
         # Store the arguments from command line
         self.action_repetition = args.action_repetition
+        self.gas_promotion = deque(maxlen=5)
 
 
 
@@ -138,7 +141,11 @@ class CarRacingV3Wrapper(gym.Wrapper):
             # Examples: Green Penalty, Die Penalty Removal etc.
 
             # Compute and subtract green penalty from the reward
-            reward = reward - self._compute_green_penalty(next_state_rgb)
+            reward -= self._compute_green_penalty(next_state_rgb)
+
+            # Add reward for prioritizing gas in last 5 actions
+            self.gas_promotion.append(np.clip(action[1], 0, 1))
+            reward += np.sum(np.array(self.gas_promotion))/100. # Max gas reward = 1*1000/100 = 10
 
             # Accumulate total reward for this action
             total_reward += reward
@@ -189,8 +196,8 @@ class CarRacingV3Wrapper(gym.Wrapper):
             # print("Car on grass!")
             # time.sleep(5)
 
-
-            return 0.2  # Return the penalty amount
+            # Max grass penalty ~g*950
+            return 0.05  # Return the penalty amount
         
         # The car is on the road (or red/white curb)
         return 0.0
