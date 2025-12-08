@@ -31,7 +31,7 @@ def get_args(parser):
 
     # Path Based Args
     parser.add_argument('--tensorboard_dir', type=str, default="runs/ppo-green-penalty-0.2", help='Directory path to use for TensorBoard')
-    parser.add_argument('--test_model_path', type=str, default="checkpoints/ppo_model_final.pth", help='File path to use for loading testing model')
+    parser.add_argument('--test_model_path', type=str, default="checkpoints/ppo_model_best_attnsk.pth", help='File path to use for loading testing model')
     parser.add_argument('--save_model_dir', type=str, default="checkpoints/ppo_green_penalty-0.2", help='Directory path to use for saving training model weight checkpoints')
 
 

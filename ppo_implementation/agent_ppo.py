@@ -127,6 +127,7 @@ class Agent_PPO():
                 print(f"\nAverage Reward (last 100 episodes): {avg_reward:.2f}")
                 if avg_reward > best_reward:
                     best_reward = avg_reward
+                    print(f"Found new best reward: {best_reward}, saving model...")
                     self.save_model(f"{self.save_model_dir}/ppo_model_best.pth")
             
             # Save model checkpoint
