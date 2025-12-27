@@ -1,14 +1,20 @@
 # AI-Car-Racing
 
 ## Overview
-TODO
+Autonomous driving in continuous-action environments remains a challenging problem in Reinforcement Learning. This project uses Gymnasium's `CarRacing-V3` environment as it provides a controlled, simulated platform where an agent must learn to navigate a procedurally generated racetrack. The agent's goal is to maximize cumulative reward while avoiding collisions. This project aims to explore and benchmark three well-established learning approaches: Deep Q-Learning (DQN), Proximal Policy Optimization (PPO) with Advantage Actor-Critic (A2C) framework, and Behavioral Cloning (BC).
+
+## Driving Samples
+
 
 ## Methods
-TODO
+We experimented with multiple Reinforcement Learning methods such as Behavioral Cloning, Deep Q-Learning (with Discrete Action Space) and Proximal Policy Optimization through Actor-Critic Framework (PPO-A2C).
 
 ## Results
-TODO
+According to the literature, we discovered that a mean reward of 800 or more is considered good. Our best performing DQN and PPO + A2C methods are able to achieve a mean reward greater than 800, as noted in the Results section. The Behavioral Cloning method is not too far behind, with a mean reward of 743.54, which is also close to the target of 800. 
 
+The DQN method was the best-performing solution with a mean reward of 866.8 and a standard deviation of 44.8. However, this cannot be directly compared to other RL methods we tried, since it's only using a Discrete Action space. 
+
+Amongst the methods using Continuous Action space, the PPO + A2C method performed the best with a mean reward of 829.35, but it showed a high standard deviation of 145.8. As noted from the performance of the Behavioral Cloning method, the dataset used for training appears to be promising in capturing effective expert demonstrations, although on its own, it does not achieve competitive performance. We believe that the PPO + A2C method can be combined with pretraining using the Behavioral Cloning (expert) dataset in future work to improve mean reward performance and reduce the high variance, potentially offering strong competition to DQN’s performance in the discrete action space.
 
 ## Setup Instructions
 
