@@ -17,7 +17,7 @@ https://github.com/user-attachments/assets/21486f1f-9d24-42d1-b023-fcc640e1017c
 We experimented with multiple Reinforcement Learning methods such as Behavioral Cloning, Deep Q-Learning (with Discrete Action Space) and Proximal Policy Optimization through Actor-Critic Framework (PPO-A2C).
 
 ## Results
-According to the literature, we discovered that a mean reward of 800 or more is considered good. Our best performing DQN and PPO + A2C methods are able to achieve a mean reward greater than 800, as noted in the Results section. The Behavioral Cloning method is not too far behind, with a mean reward of 743.54, which is also close to the target of 800. 
+According to the literature, we discovered that a mean reward of 800 or more is considered good. Our best performing DQN and PPO + A2C methods are able to achieve a mean reward greater than 800. The Behavioral Cloning method is not too far behind, with a mean reward of 743.54, which is also close to the target of 800. 
 
 The DQN method was the best-performing solution with a mean reward of 866.8 and a standard deviation of 44.8. However, this cannot be directly compared to other RL methods we tried, since it's only using a Discrete Action space. 
 
