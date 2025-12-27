@@ -4,7 +4,8 @@
 Autonomous driving in continuous-action environments remains a challenging problem in Reinforcement Learning. This project uses Gymnasium's `CarRacing-V3` environment as it provides a controlled, simulated platform where an agent must learn to navigate a procedurally generated racetrack. The agent's goal is to maximize cumulative reward while avoiding collisions. This project aims to explore and benchmark three well-established learning approaches: Deep Q-Learning (DQN), Proximal Policy Optimization (PPO) with Advantage Actor-Critic (A2C) framework, and Behavioral Cloning (BC).
 
 ## Driving Samples
-
+### PPO + A2C
+https://github.com/user-attachments/assets/1eb313a3-0ffc-4c31-9c02-7304a4b08654
 
 ## Methods
 We experimented with multiple Reinforcement Learning methods such as Behavioral Cloning, Deep Q-Learning (with Discrete Action Space) and Proximal Policy Optimization through Actor-Critic Framework (PPO-A2C).
