@@ -5,7 +5,7 @@ Autonomous driving in continuous-action environments remains a challenging probl
 
 ## Driving Samples
 ### PPO + A2C
-https://github.com/user-attachments/assets/1eb313a3-0ffc-4c31-9c02-7304a4b08654
+ <video loop src="PPO+A2C.mp4"> video </video> 
 
 ## Methods
 We experimented with multiple Reinforcement Learning methods such as Behavioral Cloning, Deep Q-Learning (with Discrete Action Space) and Proximal Policy Optimization through Actor-Critic Framework (PPO-A2C).
